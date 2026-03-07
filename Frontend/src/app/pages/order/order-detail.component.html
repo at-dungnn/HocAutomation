@@ -1,0 +1,273 @@
+<div class="min-h-screen bg-gray-50">
+  <app-header></app-header>
+
+  <main class="p-4 pb-24 max-w-7xl mx-auto w-full">
+    <!-- Back Button -->
+    <div class="mb-6">
+      <button pButton icon="pi pi-arrow-left" label="Quay lại" class="p-button-text p-button-secondary" (click)="onBack()"></button>
+    </div>
+
+    <!-- Error Message -->
+    <p-card *ngIf="errorMessage()" styleClass="mb-4 border-l-4 border-red-500">
+      <div class="flex items-center gap-3 text-red-600">
+        <i class="pi pi-exclamation-triangle text-xl"></i>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    </p-card>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading()" class="space-y-4">
+      <p-skeleton height="200px"></p-skeleton>
+      <p-skeleton height="150px"></p-skeleton>
+      <p-skeleton height="150px"></p-skeleton>
+    </div>
+
+    <!-- Order Details -->
+    <div *ngIf="!isLoading() && order()" class="flex flex-col gap-3">
+      <!-- Header Card -->
+      <p-card
+        styleClass="border-l-4"
+        [ngClass]="{
+          'border-yellow-500': order()!.status === 'PENDING',
+          'border-blue-500': order()!.status === 'ASSIGNED' || order()!.status === 'PICKED_UP' || order()!.status === 'IN_TRANSIT',
+          'border-green-500': order()!.status === 'DELIVERED',
+          'border-red-500': order()!.status === 'CANCELLED'
+        }"
+      >
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">{{ order()!.trackingNumber }}</h1>
+            <p-tag [value]="getStatusLabel(order()!.status)" [severity]="getStatusSeverity(order()!.status)" styleClass="text-base px-3 py-1"></p-tag>
+          </div>
+          <div class="text-right sm:text-left">
+            <p class="text-sm text-gray-500 mb-1">Phí vận chuyển</p>
+            <p class="text-3xl font-bold text-blue-600">{{ formatCurrency(order()!.shippingFee) }}</p>
+          </div>
+        </div>
+
+        <!-- Status Actions -->
+        <div *ngIf="canChangeStatus()" class="mt-6 pt-6 border-t border-gray-200">
+          <p class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <i class="pi pi-sync"></i>
+            Cập nhật trạng thái:
+          </p>
+          <div class="flex gap-2 flex-wrap">
+            <button
+              *ngIf="order()!.status === 'PENDING' && userRole === 'CUSTOMER'"
+              pButton
+              label="Hủy đơn"
+              icon="pi pi-times"
+              class="p-button-danger"
+              [loading]="isUpdating()"
+              (click)="onUpdateStatus('CANCELLED')"
+            ></button>
+
+            <button
+              *ngIf="order()!.status === 'ASSIGNED' && userRole === 'SHIPPER'"
+              pButton
+              label="Đã lấy hàng"
+              icon="pi pi-check"
+              class="p-button-success"
+              [loading]="isUpdating()"
+              (click)="onUpdateStatus('PICKED_UP')"
+            ></button>
+
+            <button
+              *ngIf="order()!.status === 'PICKED_UP' && userRole === 'SHIPPER'"
+              pButton
+              label="Đang giao"
+              icon="pi pi-truck"
+              class="p-button-info"
+              [loading]="isUpdating()"
+              (click)="onUpdateStatus('IN_TRANSIT')"
+            ></button>
+
+            <button
+              *ngIf="order()!.status === 'IN_TRANSIT' && userRole === 'SHIPPER'"
+              pButton
+              label="Đã giao"
+              icon="pi pi-check-circle"
+              class="p-button-success"
+              [loading]="isUpdating()"
+              (click)="onUpdateStatus('DELIVERED')"
+            ></button>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- Pickup Info -->
+      <p-card>
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2 text-blue-600">
+          <i class="pi pi-map-marker text-xl"></i>
+          Thông tin lấy hàng
+        </h3>
+        <div class="space-y-3 text-gray-700">
+          <div class="flex items-start gap-3">
+            <i class="pi pi-user text-gray-400 mt-1"></i>
+            <div>
+              <p class="text-sm text-gray-500">Người gửi</p>
+              <p class="font-medium">{{ order()!.senderName || 'N/A' }}</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="pi pi-phone text-gray-400 mt-1"></i>
+            <div>
+              <p class="text-sm text-gray-500">Số điện thoại</p>
+              <p class="font-medium">{{ order()!.senderPhone || 'N/A' }}</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="pi pi-map text-gray-400 mt-1"></i>
+            <div>
+              <p class="text-sm text-gray-500">Địa chỉ</p>
+              <p class="font-medium">{{ formatAddress(order()!.pickupAddress) }}</p>
+            </div>
+          </div>
+          <div *ngIf="order()!.estimatedPickupTime" class="flex items-start gap-3">
+            <i class="pi pi-clock text-gray-400 mt-1"></i>
+            <div>
+              <p class="text-sm text-gray-500">Thời gian lấy hàng dự kiến</p>
+              <p class="font-medium">{{ formatDate(order()!.estimatedPickupTime) }}</p>
+            </div>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- Delivery Info -->
+      <p-card>
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2 text-green-600">
+          <i class="pi pi-send text-xl"></i>
+          Thông tin giao hàng
+        </h3>
+        <div class="space-y-3 text-gray-700">
+          <div class="flex items-start gap-3">
+            <i class="pi pi-user text-gray-400 mt-1"></i>
+            <div>
+              <p class="text-sm text-gray-500">Người nhận</p>
+              <p class="font-medium">{{ order()!.recipientInfo?.name || order()!.recipientName || 'N/A' }}</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="pi pi-phone text-gray-400 mt-1"></i>
+            <div>
+              <p class="text-sm text-gray-500">Số điện thoại</p>
+              <p class="font-medium">{{ order()!.recipientInfo?.phone || order()!.recipientPhone || 'N/A' }}</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="pi pi-map text-gray-400 mt-1"></i>
+            <div>
+              <p class="text-sm text-gray-500">Địa chỉ</p>
+              <p class="font-medium">{{ formatAddress(order()!.deliveryAddress) }}</p>
+            </div>
+          </div>
+          <div *ngIf="order()!.estimatedDeliveryTime" class="flex items-start gap-3">
+            <i class="pi pi-clock text-gray-400 mt-1"></i>
+            <div>
+              <p class="text-sm text-gray-500">Thời gian giao hàng dự kiến</p>
+              <p class="font-medium">{{ formatDate(order()!.estimatedDeliveryTime) }}</p>
+            </div>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- Package Info -->
+      <p-card>
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2 text-orange-600">
+          <i class="pi pi-box text-xl"></i>
+          Thông tin hàng hóa
+        </h3>
+        <div class="space-y-3 text-gray-700">
+          <div class="flex items-start gap-3">
+            <i class="pi pi-tag text-gray-400 mt-1"></i>
+            <div>
+              <p class="text-sm text-gray-500">Loại hàng</p>
+              <p class="font-medium">{{ order()!.packageType || order()!.packageDetails?.description || 'N/A' }}</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="pi pi-chart-bar text-gray-400 mt-1"></i>
+            <div>
+              <p class="text-sm text-gray-500">Khối lượng</p>
+              <p class="font-medium">{{ order()!.weight || order()!.packageDetails?.weight || 0 }} kg</p>
+            </div>
+          </div>
+          <div *ngIf="order()!.packageDescription || order()!.packageDetails?.description" class="flex items-start gap-3">
+            <i class="pi pi-info-circle text-gray-400 mt-1"></i>
+            <div>
+              <p class="text-sm text-gray-500">Mô tả</p>
+              <p class="font-medium">{{ order()!.packageDescription || order()!.packageDetails?.description }}</p>
+            </div>
+          </div>
+          <div *ngIf="order()!.specialInstructions || order()!.deliveryInstructions" class="flex items-start gap-3">
+            <i class="pi pi-comment text-gray-400 mt-1"></i>
+            <div>
+              <p class="text-sm text-gray-500">Ghi chú đặc biệt</p>
+              <p class="font-medium">{{ order()!.specialInstructions || order()!.deliveryInstructions }}</p>
+            </div>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- Timeline -->
+      <p-card>
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2 text-purple-600">
+          <i class="pi pi-clock text-xl"></i>
+          Lịch sử đơn hàng
+        </h3>
+        <div class="flex flex-col gap-4">
+          <div class="flex items-start gap-3">
+            <div class="w-3 h-3 rounded-full bg-blue-600 mt-1.5"></div>
+            <div class="flex-1">
+              <p class="font-semibold text-gray-800">Đơn hàng được tạo</p>
+              <p class="text-sm text-gray-500">{{ formatDate(order()!.createdAt) }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="order()!.assignedAt" class="flex items-start gap-3">
+            <div class="w-3 h-3 rounded-full bg-blue-600 mt-1.5"></div>
+            <div class="flex-1">
+              <p class="font-semibold text-gray-800">Đã được nhận bởi shipper</p>
+              <p class="text-sm text-gray-500">{{ formatDate(order()!.assignedAt) }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="order()!.status === 'DELIVERED' && order()!.updatedAt" class="flex items-start gap-3">
+            <div class="w-3 h-3 rounded-full bg-green-600 mt-1.5"></div>
+            <div class="flex-1">
+              <p class="font-semibold text-gray-800">Đã giao thành công</p>
+              <p class="text-sm text-gray-500">{{ formatDate(order()!.updatedAt) }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="order()!.status === 'CANCELLED' && order()!.updatedAt" class="flex items-start gap-3">
+            <div class="w-3 h-3 rounded-full bg-red-600 mt-1.5"></div>
+            <div class="flex-1">
+              <p class="font-semibold text-gray-800">Đơn hàng đã bị hủy</p>
+              <p class="text-sm text-gray-500">{{ formatDate(order()!.updatedAt) }}</p>
+            </div>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- Shipper Info (if assigned) -->
+      <p-card *ngIf="order()!.shipperId && userRole === 'CUSTOMER'">
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2 text-indigo-600">
+          <i class="pi pi-user text-xl"></i>
+          Thông tin người giao hàng
+        </h3>
+        <div class="space-y-3 text-gray-700">
+          <div class="flex items-start gap-3">
+            <i class="pi pi-id-card text-gray-400 mt-1"></i>
+            <div>
+              <p class="text-sm text-gray-500">Mã shipper</p>
+              <p class="font-medium">{{ order()!.shipperId }}</p>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </main>
+
+  <app-footer-nav></app-footer-nav>
+</div>

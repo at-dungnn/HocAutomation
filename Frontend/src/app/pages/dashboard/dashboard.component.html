@@ -1,0 +1,141 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <app-header></app-header>
+
+  <!-- Main Content -->
+  <main class="p-4 pb-24 max-w-7xl mx-auto w-full">
+    <!-- Summary Cards -->
+    <section class="mb-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Total Orders -->
+        <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600 mb-1">Tổng đơn</p>
+              <h3 class="text-2xl font-bold text-gray-800">{{ totalOrders() }}</h3>
+            </div>
+            <i class="pi pi-shopping-cart text-3xl text-blue-500"></i>
+          </div>
+        </div>
+
+        <!-- Pending Orders -->
+        <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-yellow-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600 mb-1">Chờ xử lý</p>
+              <h3 class="text-2xl font-bold text-gray-800">{{ pendingOrders() }}</h3>
+            </div>
+            <i class="pi pi-clock text-3xl text-yellow-500"></i>
+          </div>
+        </div>
+
+        <!-- Assigned Orders -->
+        <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600 mb-1">Đã nhận</p>
+              <h3 class="text-2xl font-bold text-gray-800">{{ assignedOrders() }}</h3>
+            </div>
+            <i class="pi pi-truck text-3xl text-orange-500"></i>
+          </div>
+        </div>
+
+        <!-- Delivered Orders -->
+        <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-600 mb-1">Đã giao</p>
+              <h3 class="text-2xl font-bold text-gray-800">{{ deliveredOrders() }}</h3>
+            </div>
+            <i class="pi pi-check-circle text-3xl text-green-500"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="mb-6">
+      <!-- Customer Actions -->
+      <div *ngIf="userRole === 'CUSTOMER'" class="flex gap-3">
+        <button pButton label="Tạo đơn mới" icon="pi pi-plus" class="flex-1 bg-primary text-white py-3 font-semibold" (click)="onCreateOrder()"></button>
+      </div>
+
+      <!-- Shipper Actions -->
+      <div *ngIf="userRole === 'SHIPPER'" class="flex gap-3">
+        <button pButton label="Đơn khả dụng" icon="pi pi-list" class="flex-1" [outlined]="true" (click)="loadOrders()"></button>
+        <button pButton label="Đơn đã nhận" icon="pi pi-check" class="flex-1" (click)="onViewMyAssignments()"></button>
+      </div>
+    </section>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage()" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+      <div class="flex items-center gap-2 text-red-600">
+        <i class="pi pi-exclamation-circle"></i>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    </div>
+
+    <!-- Orders List -->
+    <section class="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div class="p-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-800">
+          {{ userRole === 'CUSTOMER' ? 'Đơn hàng của tôi' : 'Danh sách đơn hàng' }}
+        </h2>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading()" class="text-center py-12">
+        <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+        <p class="mt-4 text-gray-600">Đang tải...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading() && orders().length === 0" class="text-center py-12">
+        <i class="pi pi-inbox text-6xl text-gray-300"></i>
+        <p class="mt-4 text-gray-600">Chưa có đơn hàng nào</p>
+      </div>
+
+      <!-- Orders Table -->
+      <div *ngIf="!isLoading() && orders().length > 0" class="overflow-x-auto">
+        <p-table [value]="orders()" [responsive]="true" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="text-left p-3">Mã đơn</th>
+              <th class="text-left p-3">Trạng thái</th>
+              <th class="text-left p-3">Địa chỉ giao</th>
+              <th class="text-left p-3">Thời gian</th>
+              <th class="text-center p-3" *ngIf="userRole === 'SHIPPER'">Thao tác</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-order>
+            <tr class="border-b border-gray-100 hover:bg-gray-50">
+              <td class="p-3">
+                <span class="font-mono font-semibold text-primary text-sm">{{ order.trackingNumber }}</span>
+              </td>
+              <td class="p-3">
+                <p-tag [value]="getStatusLabel(order.status)" [severity]="getStatusSeverity(order.status)"></p-tag>
+              </td>
+              <td class="p-3">
+                <div class="text-sm">
+                  <div class="font-medium text-gray-800">{{ order.deliveryAddress.street }}</div>
+                  <div class="text-gray-500 text-xs">{{ order.deliveryAddress.district }}, {{ order.deliveryAddress.city }}</div>
+                </div>
+              </td>
+              <td class="p-3">
+                <span class="text-sm text-gray-600">{{ formatDate(order.createdAt) }}</span>
+              </td>
+              <td class="p-3 text-center" *ngIf="userRole === 'SHIPPER'">
+                <button pButton label="Nhận đơn" icon="pi pi-check" class="p-button-sm" (click)="onAcceptOrder(order.id)" *ngIf="order.status === 'PENDING'" [disabled]="isLoading()"></button>
+                <span *ngIf="order.status !== 'PENDING'" class="text-sm text-gray-400">-</span>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer Navigation -->
+  <app-footer-nav></app-footer-nav>
+</div>

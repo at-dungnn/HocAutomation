@@ -1,0 +1,202 @@
+<!-- Mobile-First Profile Page -->
+<div class="dashboard-container flex flex-col min-h-screen bg-gray-50">
+  <!-- Header Section -->
+  <header class="dashboard-header sticky top-0 z-50">
+    <div class="flex items-center justify-between bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-4 py-3 shadow-md">
+      <button
+        pButton
+        icon="pi pi-arrow-left"
+        class="p-button-text p-button-rounded !text-white"
+        routerLink="/dashboard"
+        pTooltip="Quay lại"
+      ></button>
+      <h2 class="text-lg font-bold text-white">Thông tin tài khoản</h2>
+      <div class="w-10"></div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-main flex-grow overflow-y-auto pb-24 px-4 py-4">
+    <div class="max-w-2xl mx-auto space-y-4">
+      <!-- Loading State -->
+      @if (isLoading()) {
+        <div class="space-y-4">
+          <p-skeleton height="200px" styleClass="mb-4 rounded-lg"></p-skeleton>
+          <p-skeleton height="150px" styleClass="mb-4 rounded-lg"></p-skeleton>
+          <p-skeleton height="100px" styleClass="rounded-lg"></p-skeleton>
+        </div>
+      }
+
+      <!-- Error State -->
+      @if (!isLoading() && errorMessage()) {
+        <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div class="flex items-center gap-2 text-red-600">
+            <i class="pi pi-exclamation-circle"></i>
+            <span>{{ errorMessage() }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- Profile Content -->
+      @if (!isLoading() && user()) {
+        <!-- Profile Card -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+          <!-- Profile Header -->
+          <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 p-6 text-white">
+            <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+              <p-avatar
+                icon="pi pi-user"
+                size="xlarge"
+                styleClass="bg-white/20 text-white"
+                shape="circle"
+              ></p-avatar>
+              <div class="flex-1">
+                <h2 class="text-xl sm:text-2xl font-bold">{{ user()?.name || 'Người dùng' }}</h2>
+                <p class="text-white/80 flex items-center justify-center sm:justify-start gap-2 mt-1">
+                  <i class="pi pi-graduation-cap"></i>
+                  <span>{{ getRoleLabel() }}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Profile Info -->
+          <div class="p-4 sm:p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Thông tin cá nhân</h3>
+            <div class="space-y-3">
+              <!-- Name -->
+              @if (user()?.name) {
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div class="bg-indigo-100 p-2 rounded-full">
+                    <i class="pi pi-user text-indigo-600"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs text-gray-500">Họ và tên</p>
+                    <p class="font-medium text-gray-800 truncate">{{ user()?.name }}</p>
+                  </div>
+                </div>
+              }
+
+              <!-- Email -->
+              <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div class="bg-blue-100 p-2 rounded-full">
+                  <i class="pi pi-envelope text-blue-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs text-gray-500">Email</p>
+                  <p class="font-medium text-gray-800 truncate">{{ user()?.email || 'Chưa cập nhật' }}</p>
+                </div>
+              </div>
+
+              <!-- Phone -->
+              <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div class="bg-green-100 p-2 rounded-full">
+                  <i class="pi pi-phone text-green-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs text-gray-500">Số điện thoại</p>
+                  <p class="font-medium text-gray-800">{{ user()?.phone || 'Chưa cập nhật' }}</p>
+                </div>
+              </div>
+
+              <!-- Join Date -->
+              <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div class="bg-purple-100 p-2 rounded-full">
+                  <i class="pi pi-calendar text-purple-600"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs text-gray-500">Ngày tham gia</p>
+                  <p class="font-medium text-gray-800">{{ formatDate(user()!.createdAt) }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="bg-white rounded-lg shadow-sm p-4">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Thống kê học tập</h3>
+          
+          @if (isLoadingStats()) {
+            <div class="grid grid-cols-2 gap-3">
+              <p-skeleton height="80px" styleClass="rounded-lg"></p-skeleton>
+              <p-skeleton height="80px" styleClass="rounded-lg"></p-skeleton>
+              <p-skeleton height="80px" styleClass="rounded-lg"></p-skeleton>
+              <p-skeleton height="80px" styleClass="rounded-lg"></p-skeleton>
+            </div>
+          } @else {
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-blue-50 rounded-lg p-4 text-center">
+                <div class="text-2xl sm:text-3xl font-bold text-blue-600">{{ stats()?.totalExams || 0 }}</div>
+                <div class="text-xs sm:text-sm text-gray-600 mt-1">Tổng bài thi</div>
+              </div>
+              <div class="bg-green-50 rounded-lg p-4 text-center">
+                <div class="text-2xl sm:text-3xl font-bold text-green-600">{{ stats()?.completedExams || 0 }}</div>
+                <div class="text-xs sm:text-sm text-gray-600 mt-1">Đã hoàn thành</div>
+              </div>
+              <div class="bg-purple-50 rounded-lg p-4 text-center">
+                <div class="text-2xl sm:text-3xl font-bold text-purple-600">{{ stats()?.averageScore || 0 }}%</div>
+                <div class="text-xs sm:text-sm text-gray-600 mt-1">Điểm trung bình</div>
+              </div>
+              <div class="bg-orange-50 rounded-lg p-4 text-center">
+                <div class="text-2xl sm:text-3xl font-bold text-orange-600">{{ stats()?.studyTime || 0 }}h</div>
+                <div class="text-xs sm:text-sm text-gray-600 mt-1">Thời gian học</div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-sm p-4">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Tùy chọn</h3>
+          <div class="space-y-2">
+            <a
+              routerLink="/dashboard/history"
+              class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <div class="bg-blue-100 p-2 rounded-full">
+                <i class="pi pi-history text-blue-600"></i>
+              </div>
+              <div class="flex-1">
+                <p class="font-medium text-gray-800">Lịch sử làm bài</p>
+                <p class="text-xs text-gray-500">Xem lại các bài thi đã làm</p>
+              </div>
+              <i class="pi pi-chevron-right text-gray-400"></i>
+            </a>
+
+            <a
+              routerLink="/dashboard/exams"
+              class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <div class="bg-green-100 p-2 rounded-full">
+                <i class="pi pi-file-edit text-green-600"></i>
+              </div>
+              <div class="flex-1">
+                <p class="font-medium text-gray-800">Làm bài thi</p>
+                <p class="text-xs text-gray-500">Luyện tập với đề thi mới</p>
+              </div>
+              <i class="pi pi-chevron-right text-gray-400"></i>
+            </a>
+
+            <button
+              class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors w-full text-left"
+              (click)="onLogout()"
+              [disabled]="isLoggingOut()"
+            >
+              <div class="bg-red-100 p-2 rounded-full">
+                <i class="pi text-red-600" [ngClass]="isLoggingOut() ? 'pi-spin pi-spinner' : 'pi-sign-out'"></i>
+              </div>
+              <div class="flex-1">
+                <p class="font-medium text-red-600">{{ isLoggingOut() ? 'Đang đăng xuất...' : 'Đăng xuất' }}</p>
+                <p class="text-xs text-gray-500">Thoát khỏi tài khoản</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </main>
+
+  <!-- Footer Navigation -->
+  <app-footer-nav></app-footer-nav>
+</div>

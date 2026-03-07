@@ -1,0 +1,106 @@
+<div class="min-h-screen bg-gray-50">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <!-- Header -->
+  <header class="bg-primary text-white shadow-md">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <button pButton icon="pi pi-arrow-left" class="!bg-white !text-primary" rounded="true" (click)="goBack()"></button>
+          <div>
+            <h1 class="text-2xl font-bold">Quản lý người dùng</h1>
+            <p class="text-sm opacity-90">Quản lý thông tin và phân quyền người dùng</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <!-- Toolbar -->
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">Danh sách người dùng</h2>
+        <button pButton label="Thêm người dùng" icon="pi pi-plus" severity="success" (click)="openNew()"></button>
+      </div>
+
+      <!-- Table -->
+      <p-table
+        [value]="users"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} người dùng"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        styleClass="p-datatable-striped"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="name">Tên <p-sortIcon field="name"></p-sortIcon></th>
+            <th pSortableColumn="email">Email <p-sortIcon field="email"></p-sortIcon></th>
+            <th pSortableColumn="phone">Số điện thoại <p-sortIcon field="phone"></p-sortIcon></th>
+            <th pSortableColumn="role">Vai trò <p-sortIcon field="role"></p-sortIcon></th>
+            <th>Thao tác</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-user>
+          <tr>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.phone }}</td>
+            <td>
+              <p-tag [value]="getRoleLabel(user.role)" [severity]="getRoleSeverity(user.role)"></p-tag>
+            </td>
+            <td>
+              <div class="flex gap-2">
+                <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info" (click)="editUser(user)"></button>
+                <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" (click)="deleteUser(user)"></button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="text-center py-8 text-gray-500">Không có dữ liệu</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </main>
+
+  <!-- Dialog -->
+  <p-dialog [(visible)]="displayDialog" [header]="isEditMode ? 'Cập nhật người dùng' : 'Thêm người dùng mới'" [modal]="true" [style]="{ width: '500px' }" [draggable]="false" [resizable]="false">
+    <form [formGroup]="userForm" class="space-y-4">
+      <div class="flex flex-col gap-2">
+        <label for="name" class="font-medium">Tên <span class="text-red-500">*</span></label>
+        <input pInputText id="name" formControlName="name" placeholder="Nhập tên" class="w-full" />
+        <small *ngIf="userForm.get('name')?.invalid && userForm.get('name')?.touched" class="text-red-500"> Vui lòng nhập tên </small>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="email" class="font-medium">Email <span class="text-red-500">*</span></label>
+        <input pInputText id="email" formControlName="email" placeholder="Nhập email" class="w-full" />
+        <small *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched" class="text-red-500"> Vui lòng nhập email hợp lệ </small>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="phone" class="font-medium">Số điện thoại <span class="text-red-500">*</span></label>
+        <input pInputText id="phone" formControlName="phone" placeholder="Nhập số điện thoại" class="w-full" />
+        <small *ngIf="userForm.get('phone')?.invalid && userForm.get('phone')?.touched" class="text-red-500"> Vui lòng nhập số điện thoại hợp lệ </small>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="role" class="font-medium">Vai trò <span class="text-red-500">*</span></label>
+        <p-dropdown id="role" formControlName="role" [options]="roles" optionLabel="label" optionValue="value" placeholder="Chọn vai trò" styleClass="w-full"></p-dropdown>
+      </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+      <button pButton label="Hủy" icon="pi pi-times" class="p-button-text" (click)="displayDialog = false"></button>
+      <button pButton label="Lưu" icon="pi pi-check" (click)="saveUser()"></button>
+    </ng-template>
+  </p-dialog>
+</div>

@@ -1,0 +1,135 @@
+<div class="min-h-screen bg-gray-50 pb-20">
+  <p-toast />
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <div class="flex items-center gap-3">
+        <button
+          pButton
+          icon="pi pi-arrow-left"
+          class="p-button-rounded p-button-text p-button-sm !text-white hover:!bg-white/20"
+          routerLink="/dashboard"
+          pTooltip="Quay lại"
+        ></button>
+        <div>
+          <h1 class="text-xl font-bold">Lịch sử thi</h1>
+          <p class="text-sm text-indigo-200">Xem lại kết quả các bài thi đã làm</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <div class="max-w-7xl mx-auto px-4 py-4">
+    <!-- Loading Skeleton -->
+    <div *ngIf="loading" class="space-y-4">
+      <div *ngFor="let i of [1,2,3,4,5]" class="bg-white rounded-xl shadow-sm p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <p-skeleton height="1.5rem" width="60%" styleClass="mb-2" />
+            <p-skeleton height="1rem" width="40%" />
+          </div>
+          <p-skeleton height="2.5rem" width="5rem" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && attempts.length === 0" class="text-center py-12">
+      <i class="pi pi-history text-5xl text-gray-300 mb-4"></i>
+      <p class="text-gray-500 text-lg">Chưa có lịch sử thi</p>
+      <p class="text-gray-400 text-sm mb-4">Hãy bắt đầu làm bài thi đầu tiên</p>
+      <button
+        pButton
+        label="Xem đề thi"
+        icon="pi pi-arrow-right"
+        routerLink="/dashboard/exams"
+      ></button>
+    </div>
+
+    <!-- History List -->
+    <div *ngIf="!loading && attempts.length > 0" class="space-y-4">
+      <div
+        *ngFor="let attempt of attempts"
+        class="bg-white rounded-xl shadow-sm overflow-hidden"
+      >
+        <div class="p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex-1">
+              <h6 class="font-semibold text-gray-800">
+                {{ attempt.exam?.title || 'Bài thi' }}
+              </h6>
+              <p class="text-sm text-gray-500">
+                {{ formatDate(attempt.startedAt) }}
+              </p>
+            </div>
+            <p-tag
+              [value]="getStatusLabel(attempt.status)"
+              [severity]="getStatusSeverity(attempt.status)"
+            />
+          </div>
+
+          <!-- Result Stats -->
+          <div *ngIf="attempt.status === 'COMPLETED'" class="grid grid-cols-3 gap-4 bg-gray-50 rounded-lg p-3">
+            <div class="text-center">
+              <div
+                class="text-2xl font-bold"
+                [class.text-green-600]="attempt.isPassed"
+                [class.text-red-600]="!attempt.isPassed"
+              >
+                {{ attempt.score | number:'1.1-1' }}%
+              </div>
+              <div class="text-xs text-gray-500">Điểm số</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-blue-600">
+                {{ formatTimeSpent(attempt.timeSpent) }}
+              </div>
+              <div class="text-xs text-gray-500">Thời gian</div>
+            </div>
+            <div class="text-center">
+              <div
+                class="text-lg font-bold px-3 py-1 rounded-full"
+                [class.bg-green-100]="attempt.isPassed"
+                [class.text-green-700]="attempt.isPassed"
+                [class.bg-red-100]="!attempt.isPassed"
+                [class.text-red-700]="!attempt.isPassed"
+              >
+                {{ attempt.isPassed ? 'Đậu' : 'Rớt' }}
+              </div>
+              <div class="text-xs text-gray-500 mt-1">Kết quả</div>
+            </div>
+          </div>
+
+          <!-- In Progress -->
+          <div *ngIf="attempt.status === 'IN_PROGRESS'" class="bg-yellow-50 rounded-lg p-3 text-center">
+            <p class="text-yellow-700 text-sm">
+              <i class="pi pi-exclamation-triangle mr-1"></i>
+              Bài thi chưa hoàn thành
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Load More -->
+      <div *ngIf="hasMore" class="text-center py-4">
+        <button
+          pButton
+          label="Xem thêm"
+          icon="pi pi-chevron-down"
+          class="p-button-outlined"
+          (click)="loadMore()"
+        ></button>
+      </div>
+
+      <!-- Stats -->
+      <div class="text-center py-2 text-sm text-gray-500">
+        Hiển thị {{ attempts.length }} / {{ total }} kết quả
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Nav -->
+  <app-footer-nav />
+</div>

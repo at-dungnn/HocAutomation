@@ -1,0 +1,308 @@
+<div class="min-h-screen bg-gray-100">
+  <p-toast />
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex items-center justify-center min-h-screen">
+    <div class="text-center">
+      <i class="pi pi-spin pi-spinner text-5xl text-blue-600 mb-4"></i>
+      <p class="text-gray-600">Đang tải bài thi...</p>
+    </div>
+  </div>
+
+  <!-- Exam Content -->
+  <div *ngIf="!loading && !showResult" class="flex flex-col h-screen">
+    <!-- Header with Timer -->
+    <header class="bg-white shadow-sm border-b sticky top-0 z-20">
+      <div class="max-w-7xl mx-auto px-4 py-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-lg md:text-xl font-bold text-gray-800 truncate">{{ exam?.title }}</h1>
+            <p class="text-sm text-gray-500">{{ answeredCount }}/{{ questions.length }} câu đã trả lời</p>
+          </div>
+
+          <!-- Timer -->
+          <div
+            class="flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-lg font-bold"
+            [class.bg-green-100]="!isTimeWarning"
+            [class.text-green-700]="!isTimeWarning"
+            [class.bg-yellow-100]="isTimeWarning && !isTimeCritical"
+            [class.text-yellow-700]="isTimeWarning && !isTimeCritical"
+            [class.bg-red-100]="isTimeCritical"
+            [class.text-red-700]="isTimeCritical"
+            [class.animate-pulse]="isTimeCritical"
+          >
+            <i class="pi pi-clock"></i>
+            <span>{{ formatTime(remainingSeconds) }}</span>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mt-2">
+          <p-progressBar [value]="progressPercent" [showValue]="false" styleClass="h-2" />
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex overflow-hidden">
+      <!-- Question Panel -->
+      <main class="flex-1 overflow-y-auto p-4 md:p-6">
+        <div class="max-w-3xl mx-auto">
+          <!-- Question Card -->
+          <div *ngIf="currentQuestion" class="bg-white rounded-xl shadow-sm p-6">
+            <!-- Question Header -->
+            <div class="flex items-start justify-between mb-4">
+              <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold">
+                {{ currentQuestionIndex + 1 }}
+              </span>
+              <p-tag [value]="currentQuestion.points + ' điểm'" severity="info" />
+            </div>
+
+            <!-- Question Content -->
+            <div class="mb-6">
+              <p class="text-lg text-gray-800 leading-relaxed">{{ currentQuestion.content }}</p>
+            </div>
+
+            <!-- Answer Options -->
+            <div class="space-y-3">
+              <div
+                *ngFor="let option of currentQuestion.options; let i = index"
+                class="flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all"
+                [class.border-gray-200]="answers[currentQuestion.id] !== option.id"
+                [class.bg-gray-50]="answers[currentQuestion.id] !== option.id"
+                [class.border-blue-500]="answers[currentQuestion.id] === option.id"
+                [class.bg-blue-50]="answers[currentQuestion.id] === option.id"
+                (click)="selectAnswer(currentQuestion.id, option.id)"
+              >
+                <p-radioButton
+                  [name]="'question_' + currentQuestion.id"
+                  [value]="option.id"
+                  [(ngModel)]="answers[currentQuestion.id]"
+                  [inputId]="'opt_' + option.id"
+                />
+                <label [for]="'opt_' + option.id" class="ml-3 flex-1 cursor-pointer">
+                  <span class="font-medium text-gray-700 mr-2">{{ ['A', 'B', 'C', 'D'][i] }}.</span>
+                  <span class="text-gray-800">{{ option.text }}</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex items-center justify-between mt-8 pt-6 border-t">
+              <button
+                pButton
+                label="Câu trước"
+                icon="pi pi-arrow-left"
+                class="p-button-outlined"
+                [disabled]="currentQuestionIndex === 0"
+                (click)="prevQuestion()"
+              ></button>
+
+              <div class="flex gap-2">
+                <button
+                  *ngIf="currentQuestionIndex < questions.length - 1"
+                  pButton
+                  label="Câu tiếp"
+                  icon="pi pi-arrow-right"
+                  iconPos="right"
+                  (click)="nextQuestion()"
+                ></button>
+                <button
+                  *ngIf="currentQuestionIndex === questions.length - 1"
+                  pButton
+                  label="Nộp bài"
+                  icon="pi pi-check"
+                  class="p-button-success"
+                  (click)="confirmSubmit()"
+                ></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Question Navigator (Sidebar) -->
+      <aside class="hidden md:block w-64 bg-white border-l overflow-y-auto p-4">
+        <h3 class="font-semibold text-gray-700 mb-4">Danh sách câu hỏi</h3>
+        <div class="grid grid-cols-5 gap-2">
+          <button
+            *ngFor="let q of questions; let i = index"
+            class="w-10 h-10 rounded-lg font-medium text-sm transition-all"
+            [class.bg-blue-500]="currentQuestionIndex === i"
+            [class.text-white]="currentQuestionIndex === i"
+            [class.bg-green-100]="currentQuestionIndex !== i && isQuestionAnswered(i)"
+            [class.text-green-700]="currentQuestionIndex !== i && isQuestionAnswered(i)"
+            [class.bg-gray-100]="currentQuestionIndex !== i && !isQuestionAnswered(i)"
+            [class.text-gray-600]="currentQuestionIndex !== i && !isQuestionAnswered(i)"
+            (click)="goToQuestion(i)"
+          >
+            {{ i + 1 }}
+          </button>
+        </div>
+
+        <div class="mt-6 space-y-2 text-sm">
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded bg-green-100"></span>
+            <span class="text-gray-600">Đã trả lời ({{ answeredCount }})</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded bg-gray-100"></span>
+            <span class="text-gray-600">Chưa trả lời ({{ questions.length - answeredCount }})</span>
+          </div>
+        </div>
+
+        <button
+          pButton
+          label="Nộp bài"
+          icon="pi pi-check"
+          class="w-full mt-6 p-button-success"
+          (click)="confirmSubmit()"
+        ></button>
+      </aside>
+    </div>
+
+    <!-- Mobile Question Navigator -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-3 z-10">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-600">
+          Câu {{ currentQuestionIndex + 1 }}/{{ questions.length }}
+        </span>
+        <div class="flex gap-2">
+          <button
+            pButton
+            icon="pi pi-arrow-left"
+            class="p-button-sm p-button-outlined"
+            [disabled]="currentQuestionIndex === 0"
+            (click)="prevQuestion()"
+          ></button>
+          <button
+            pButton
+            icon="pi pi-arrow-right"
+            class="p-button-sm p-button-outlined"
+            [disabled]="currentQuestionIndex === questions.length - 1"
+            (click)="nextQuestion()"
+          ></button>
+          <button
+            pButton
+            label="Nộp"
+            icon="pi pi-check"
+            class="p-button-sm p-button-success"
+            (click)="confirmSubmit()"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Submit Dialog -->
+  <p-dialog
+    [(visible)]="showConfirmSubmit"
+    header="Xác nhận nộp bài"
+    [modal]="true"
+    [style]="{ width: '400px' }"
+    [draggable]="false"
+  >
+    <div class="text-center py-4">
+      <i class="pi pi-exclamation-triangle text-5xl text-yellow-500 mb-4"></i>
+      <p class="text-gray-700 mb-2">Bạn có chắc chắn muốn nộp bài?</p>
+      <p class="text-sm text-gray-500">
+        Đã trả lời: <strong class="text-green-600">{{ answeredCount }}</strong> / {{ questions.length }} câu
+      </p>
+      <p *ngIf="answeredCount < questions.length" class="text-sm text-orange-500 mt-2">
+        <i class="pi pi-info-circle mr-1"></i>
+        Còn {{ questions.length - answeredCount }} câu chưa trả lời
+      </p>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        label="Tiếp tục làm bài"
+        icon="pi pi-times"
+        class="p-button-text"
+        (click)="cancelSubmit()"
+      ></button>
+      <button
+        pButton
+        label="Nộp bài"
+        icon="pi pi-check"
+        class="p-button-success"
+        (click)="submitExam()"
+        [loading]="submitting"
+      ></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Result Screen -->
+  <div *ngIf="showResult && result" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+      <!-- Result Icon -->
+      <div
+        class="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center"
+        [class.bg-green-100]="result.isPassed"
+        [class.bg-red-100]="!result.isPassed"
+      >
+        <i
+          class="text-5xl"
+          [class.pi-check-circle]="result.isPassed"
+          [class.text-green-500]="result.isPassed"
+          [class.pi-times-circle]="!result.isPassed"
+          [class.text-red-500]="!result.isPassed"
+          [ngClass]="result.isPassed ? 'pi pi-check-circle' : 'pi pi-times-circle'"
+        ></i>
+      </div>
+
+      <!-- Result Status -->
+      <h2
+        class="text-2xl font-bold mb-2"
+        [class.text-green-600]="result.isPassed"
+        [class.text-red-600]="!result.isPassed"
+      >
+        {{ result.isPassed ? 'Chúc mừng! Bạn đã đậu!' : 'Rất tiếc! Bạn chưa đạt' }}
+      </h2>
+
+      <p class="text-gray-500 mb-6">{{ exam?.title }}</p>
+
+      <!-- Score -->
+      <div class="bg-gray-50 rounded-xl p-6 mb-6">
+        <div class="text-5xl font-bold mb-2" [class.text-green-600]="result.isPassed" [class.text-red-600]="!result.isPassed">
+          {{ result.score | number:'1.1-1' }}%
+        </div>
+        <p class="text-gray-500 text-sm">Điểm đậu: {{ exam?.passingScore }}%</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="text-center">
+          <div class="text-2xl font-bold text-green-600">{{ result.correctAnswers }}</div>
+          <div class="text-xs text-gray-500">Đúng</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-red-600">{{ result.wrongAnswers }}</div>
+          <div class="text-xs text-gray-500">Sai</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-gray-400">{{ result.skippedAnswers }}</div>
+          <div class="text-xs text-gray-500">Bỏ qua</div>
+        </div>
+      </div>
+
+      <!-- Time Spent -->
+      <p class="text-sm text-gray-500 mb-6">
+        <i class="pi pi-clock mr-1"></i>
+        Thời gian làm bài: {{ formatTimeSpent(result.timeSpent) }}
+      </p>
+
+      <!-- Actions -->
+      <div class="flex flex-col gap-3">
+        <button
+          pButton
+          label="Về trang chủ"
+          icon="pi pi-home"
+          class="w-full"
+          (click)="goToDashboard()"
+        ></button>
+      </div>
+    </div>
+  </div>
+</div>

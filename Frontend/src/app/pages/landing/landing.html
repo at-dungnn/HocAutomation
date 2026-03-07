@@ -1,0 +1,31 @@
+<!-- Mobile-First Responsive Dashboard -->
+<div class="dashboard-container flex flex-col min-h-screen">
+  <!-- Header Section -->
+  <header class="dashboard-header">
+    <div class="flex flex-col items-center justify-between text-center bg-primary text-white safe-p">
+      <div class="p-8">
+        <h2 class="text-white">Giao Hàng Nhanh</h2>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-main flex-grow">
+    <!-- Summary Cards Section -->
+    <section class="summary-section">
+      <div class="flex items-center justify-center h-full">
+        <img src="assets/images/delivery-illustration.png" alt="Delivery" class="object-contain max-h-full w-auto" />
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer Navigation -->
+  <footer class="dashboard-footer">
+    <div class="flex flex-col items-center justify-between text-center bg-primary text-white safe-p">
+      <div class="p-8">
+        <button pButton label="Bắt đầu với ứng dụng" class="w-full !bg-white !text-primary !rounded-full font-semibold py-3 mt-4" (click)="goToDashboard()"></button>
+        <button pButton label="Bắt đầu với khu vực quản lý" class="w-full !bg-white !text-primary !rounded-full font-semibold py-3 mt-4" (click)="goToAdminLogin()"></button>
+      </div>
+    </div>
+  </footer>
+</div>

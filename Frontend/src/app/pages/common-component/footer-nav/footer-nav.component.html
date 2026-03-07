@@ -1,0 +1,53 @@
+<footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+  <nav class="max-w-7xl mx-auto px-2 sm:px-4">
+    <div class="flex justify-around items-center py-2">
+      <!-- Home -->
+      <a
+        routerLink="/dashboard"
+        class="flex flex-col items-center gap-1 py-2 px-2 sm:px-4 rounded-lg transition-colors"
+        [class.text-indigo-600]="isActive('/dashboard') && !isActive('/dashboard/exams') && !isActive('/dashboard/history')"
+        [class.bg-indigo-50]="isActive('/dashboard') && !isActive('/dashboard/exams') && !isActive('/dashboard/history')"
+        [class.text-gray-600]="!isActive('/dashboard') || isActive('/dashboard/exams') || isActive('/dashboard/history')"
+      >
+        <i class="pi pi-home text-lg sm:text-xl"></i>
+        <span class="text-[10px] sm:text-xs font-medium">Trang chủ</span>
+      </a>
+
+      <!-- Exams -->
+      <a
+        routerLink="/dashboard/exams"
+        class="flex flex-col items-center gap-1 py-2 px-2 sm:px-4 rounded-lg transition-colors"
+        [class.text-indigo-600]="isActive('/dashboard/exams')"
+        [class.bg-indigo-50]="isActive('/dashboard/exams')"
+        [class.text-gray-600]="!isActive('/dashboard/exams')"
+      >
+        <i class="pi pi-file-edit text-lg sm:text-xl"></i>
+        <span class="text-[10px] sm:text-xs font-medium">Đề thi</span>
+      </a>
+
+      <!-- History -->
+      <a
+        routerLink="/dashboard/history"
+        class="flex flex-col items-center gap-1 py-2 px-2 sm:px-4 rounded-lg transition-colors"
+        [class.text-indigo-600]="isActive('/dashboard/history')"
+        [class.bg-indigo-50]="isActive('/dashboard/history')"
+        [class.text-gray-600]="!isActive('/dashboard/history')"
+      >
+        <i class="pi pi-history text-lg sm:text-xl"></i>
+        <span class="text-[10px] sm:text-xs font-medium">Lịch sử</span>
+      </a>
+
+      <!-- Profile -->
+      <a
+        routerLink="/profile"
+        class="flex flex-col items-center gap-1 py-2 px-2 sm:px-4 rounded-lg transition-colors"
+        [class.text-indigo-600]="isActive('/profile')"
+        [class.bg-indigo-50]="isActive('/profile')"
+        [class.text-gray-600]="!isActive('/profile')"
+      >
+        <i class="pi pi-user text-lg sm:text-xl"></i>
+        <span class="text-[10px] sm:text-xs font-medium">Tài khoản</span>
+      </a>
+    </div>
+  </nav>
+</footer>

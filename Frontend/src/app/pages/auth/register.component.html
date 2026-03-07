@@ -1,0 +1,212 @@
+<!-- Mobile-First Responsive Dashboard -->
+<div class="dashboard-container flex flex-col min-h-screen bg-gray-50">
+  <!-- Header Section -->
+  <header class="dashboard-header sticky top-0 z-10">
+    <div class="flex items-center justify-between bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-4 py-3 shadow-md">
+      <button
+        pButton
+        icon="pi pi-arrow-left"
+        class="p-button-text p-button-rounded !text-white"
+        routerLink="/"
+        pTooltip="Quay lại"
+      ></button>
+      <h2 class="text-lg font-bold text-white">Đăng ký tài khoản</h2>
+      <div class="w-10"></div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-main flex-grow overflow-y-auto pb-24">
+    <div class="max-w-md mx-auto px-4 py-6">
+      <!-- Logo Section -->
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-full mb-3">
+          <i class="pi pi-graduation-cap text-3xl text-white"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Tạo tài khoản mới</h3>
+        <p class="text-sm text-gray-600">Bắt đầu hành trình học tập của bạn</p>
+      </div>
+
+      <!-- Form Card -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">
+          <!-- Role Selection -->
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">
+              Vai trò <span class="text-red-500">*</span>
+            </label>
+            <div class="flex gap-6">
+              <label for="roleCustomer" class="flex items-center gap-2 cursor-pointer">
+                <p-radioButton inputId="roleCustomer" name="role" value="CUSTOMER" formControlName="role"></p-radioButton>
+                <i class="pi pi-user text-indigo-600"></i>
+                <span class="text-sm text-gray-700">Học viên</span>
+              </label>
+              <label for="roleInstructor" class="flex items-center gap-2 cursor-pointer">
+                <p-radioButton inputId="roleInstructor" name="role" value="INSTRUCTOR" formControlName="role"></p-radioButton>
+                <i class="pi pi-briefcase text-indigo-600"></i>
+                <span class="text-sm text-gray-700">Giảng viên</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Username -->
+          <div class="space-y-2">
+            <label for="username" class="block text-sm font-medium text-gray-700">
+              Tên đăng nhập <span class="text-red-500">*</span>
+            </label>
+            <input
+              pInputText
+              id="username"
+              type="text"
+              formControlName="username"
+              placeholder="👤 username123"
+              class="w-full"
+              [class.p-invalid]="f['username'].invalid && f['username'].touched"
+            />
+            <small *ngIf="f['username'].invalid && f['username'].touched" class="text-red-500 text-xs">
+              {{ getErrorMessage('username') }}
+            </small>
+          </div>
+
+          <!-- Full Name -->
+          <div class="space-y-2">
+            <label for="fullName" class="block text-sm font-medium text-gray-700">
+              Họ và tên <span class="text-red-500">*</span>
+            </label>
+            <input
+              pInputText
+              id="fullName"
+              type="text"
+              formControlName="fullName"
+              placeholder="Nguyễn Văn A"
+              class="w-full"
+              [class.p-invalid]="f['fullName'].invalid && f['fullName'].touched"
+            />
+            <small *ngIf="f['fullName'].invalid && f['fullName'].touched" class="text-red-500 text-xs">
+              {{ getErrorMessage('fullName') }}
+            </small>
+          </div>
+
+          <!-- Email -->
+          <div class="space-y-2">
+            <label for="email" class="block text-sm font-medium text-gray-700">
+              Email <span class="text-red-500">*</span>
+            </label>
+            <input
+              pInputText
+              id="email"
+              type="email"
+              formControlName="email"
+              placeholder="email@example.com"
+              class="w-full"
+              [class.p-invalid]="f['email'].invalid && f['email'].touched"
+            />
+            <small *ngIf="f['email'].invalid && f['email'].touched" class="text-red-500 text-xs">
+              {{ getErrorMessage('email') }}
+            </small>
+          </div>
+
+          <!-- Phone -->
+          <div class="space-y-2">
+            <label for="phone" class="block text-sm font-medium text-gray-700">
+              Số điện thoại <span class="text-red-500">*</span>
+            </label>
+            <input
+              pInputText
+              id="phone"
+              type="tel"
+              formControlName="phone"
+              placeholder="0123456789"
+              class="w-full"
+              [class.p-invalid]="f['phone'].invalid && f['phone'].touched"
+            />
+            <small *ngIf="f['phone'].invalid && f['phone'].touched" class="text-red-500 text-xs">
+              {{ getErrorMessage('phone') }}
+            </small>
+          </div>
+
+          <!-- Password -->
+          <div class="space-y-2">
+            <label for="password" class="block text-sm font-medium text-gray-700">
+              Mật khẩu <span class="text-red-500">*</span>
+            </label>
+            <p-password
+              id="password"
+              formControlName="password"
+              placeholder="🔒 Nhập mật khẩu (tối thiểu 6 ký tự)"
+              [toggleMask]="true"
+              [feedback]="true"
+              styleClass="w-full"
+              inputStyleClass="w-full"
+              promptLabel="Nhập mật khẩu"
+              weakLabel="Yếu"
+              mediumLabel="Trung bình"
+              strongLabel="Mạnh"
+              [class.p-invalid]="f['password'].invalid && f['password'].touched"
+            ></p-password>
+            <small *ngIf="f['password'].invalid && f['password'].touched" class="text-red-500 text-xs">
+              {{ getErrorMessage('password') }}
+            </small>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="space-y-2">
+            <label for="confirmPassword" class="block text-sm font-medium text-gray-700">
+              Xác nhận mật khẩu <span class="text-red-500">*</span>
+            </label>
+            <p-password
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              placeholder="🔒 Nhập lại mật khẩu"
+              [toggleMask]="true"
+              [feedback]="false"
+              styleClass="w-full"
+              inputStyleClass="w-full"
+              [class.p-invalid]="(f['confirmPassword'].invalid && f['confirmPassword'].touched) || getPasswordMismatchError()"
+            ></p-password>
+            <small *ngIf="f['confirmPassword'].invalid && f['confirmPassword'].touched" class="text-red-500 text-xs">
+              {{ getErrorMessage('confirmPassword') }}
+            </small>
+            <small *ngIf="getPasswordMismatchError()" class="text-red-500 text-xs">
+              {{ getPasswordMismatchError() }}
+            </small>
+          </div>
+
+          <!-- Server Error Message -->
+          <div *ngIf="registerForm.errors?.['serverError']" class="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p class="text-red-600 text-sm flex items-center gap-2">
+              <i class="pi pi-exclamation-circle"></i>
+              {{ registerForm.errors?.['serverError'] }}
+            </p>
+          </div>
+
+          <!-- Login Link -->
+          <div class="text-center pt-2">
+            <span class="text-sm text-gray-600">
+              Đã có tài khoản?
+              <span class="font-medium text-indigo-600 cursor-pointer hover:underline" (click)="goToLogin()">
+                Đăng nhập ngay
+              </span>
+            </span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Navigation -->
+  <footer class="dashboard-footer fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-10">
+    <div class="max-w-md mx-auto px-4 py-3">
+      <button
+        pButton
+        type="submit"
+        label="Đăng ký"
+        icon="pi pi-user-plus"
+        class="w-full"
+        [loading]="isSubmitting"
+        [disabled]="isSubmitting || registerForm.invalid"
+        (click)="onSubmit()"
+      ></button>
+    </div>
+  </footer>
+</div>

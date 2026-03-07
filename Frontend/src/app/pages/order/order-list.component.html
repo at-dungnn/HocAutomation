@@ -1,0 +1,231 @@
+<div class="min-h-screen bg-gray-50">
+  <app-header></app-header>
+
+  <main class="p-4 pb-24 max-w-7xl mx-auto w-full">
+    <!-- Page Header -->
+    <div class="mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-1">Đơn hàng của tôi</h1>
+          <p class="text-sm text-gray-600">Quản lý và theo dõi đơn hàng của bạn</p>
+        </div>
+        <button *ngIf="userRole === 'CUSTOMER'" pButton label="Tạo đơn mới" icon="pi pi-plus" class="p-button" routerLink="/order/create"></button>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <p-card *ngIf="errorMessage()" styleClass="mb-4 border-l-4 border-red-500">
+      <div class="flex items-center gap-3 text-red-600">
+        <i class="pi pi-exclamation-triangle text-xl"></i>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    </p-card>
+
+    <!-- Tabs -->
+    <div class="w-full overflow-hidden">
+      <p-tabView [(activeIndex)]="activeTabIndex" styleClass="order-tabs w-full">
+        <!-- Tab Chờ xử lý -->
+        <p-tabPanel [header]="'Chờ xử lý (' + pendingOrders().length + ')'">
+          <div *ngIf="isLoading()" class="space-y-4">
+            <p-skeleton height="120px" *ngFor="let i of [1, 2, 3]"></p-skeleton>
+          </div>
+
+          <div *ngIf="!isLoading() && pendingOrders().length === 0" class="text-center py-12">
+            <i class="pi pi-inbox text-6xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">Không có đơn hàng chờ xử lý</p>
+          </div>
+
+          <div *ngIf="!isLoading()" class="space-y-3">
+            <p-card *ngFor="let order of pendingOrders()" styleClass="hover:shadow-lg transition-all cursor-pointer border-l-4 border-yellow-500" (click)="onViewDetail(order.id)">
+              <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="font-bold text-lg text-gray-800">{{ order.trackingNumber }}</span>
+                    <p-tag [value]="getStatusLabel(order.status)" [severity]="getStatusSeverity(order.status)"></p-tag>
+                  </div>
+                  <div class="space-y-2 text-sm text-gray-600">
+                    <div class="flex items-start gap-2">
+                      <i class="pi pi-map-marker text-blue-600 mt-0.5"></i>
+                      <span class="flex-1">{{ formatAddress(order.pickupAddress) }}</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <i class="pi pi-send text-green-600 mt-0.5"></i>
+                      <span class="flex-1">{{ formatAddress(order.deliveryAddress) }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-gray-500">
+                      <i class="pi pi-clock"></i>
+                      <span>{{ formatDate(order.createdAt) }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right sm:text-left">
+                  <p class="text-sm text-gray-500 mb-1">Phí vận chuyển</p>
+                  <p class="text-xl font-bold text-blue-600">{{ formatCurrency(order.shippingFee || 0) }}</p>
+                </div>
+              </div>
+            </p-card>
+          </div>
+        </p-tabPanel>
+
+        <!-- Tab Đang giao -->
+        <p-tabPanel [header]="'Đang giao (' + (assignedOrders().length + inTransitOrders().length) + ')'">
+          <div *ngIf="isLoading()" class="space-y-4">
+            <p-skeleton height="120px" *ngFor="let i of [1, 2, 3]"></p-skeleton>
+          </div>
+
+          <div *ngIf="!isLoading() && assignedOrders().length === 0 && inTransitOrders().length === 0" class="text-center py-12">
+            <i class="pi pi-inbox text-6xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">Không có đơn hàng đang giao</p>
+          </div>
+
+          <div *ngIf="!isLoading()" class="space-y-3">
+            <ng-container *ngFor="let order of assignedOrders()">
+              <p-card styleClass="hover:shadow-lg transition-all cursor-pointer border-l-4 border-blue-500" (click)="onViewDetail(order.id)">
+                <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-3">
+                      <span class="font-bold text-lg text-gray-800">{{ order.trackingNumber }}</span>
+                      <p-tag [value]="getStatusLabel(order.status)" [severity]="getStatusSeverity(order.status)"></p-tag>
+                    </div>
+                    <div class="space-y-2 text-sm text-gray-600">
+                      <div class="flex items-start gap-2">
+                        <i class="pi pi-map-marker text-blue-600 mt-0.5"></i>
+                        <span class="flex-1">{{ formatAddress(order.pickupAddress) }}</span>
+                      </div>
+                      <div class="flex items-start gap-2">
+                        <i class="pi pi-send text-green-600 mt-0.5"></i>
+                        <span class="flex-1">{{ formatAddress(order.deliveryAddress) }}</span>
+                      </div>
+                      <div class="flex items-center gap-2 text-gray-500">
+                        <i class="pi pi-clock"></i>
+                        <span>{{ formatDate(order.createdAt) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-right sm:text-left">
+                    <p class="text-sm text-gray-500 mb-1">Phí vận chuyển</p>
+                    <p class="text-xl font-bold text-blue-600">{{ formatCurrency(order.shippingFee || 0) }}</p>
+                  </div>
+                </div>
+              </p-card>
+            </ng-container>
+            <ng-container *ngFor="let order of inTransitOrders()">
+              <p-card styleClass="hover:shadow-lg transition-all cursor-pointer border-l-4 border-blue-500" (click)="onViewDetail(order.id)">
+                <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-3">
+                      <span class="font-bold text-lg text-gray-800">{{ order.trackingNumber }}</span>
+                      <p-tag [value]="getStatusLabel(order.status)" [severity]="getStatusSeverity(order.status)"></p-tag>
+                    </div>
+                    <div class="space-y-2 text-sm text-gray-600">
+                      <div class="flex items-start gap-2">
+                        <i class="pi pi-map-marker text-blue-600 mt-0.5"></i>
+                        <span class="flex-1">{{ formatAddress(order.pickupAddress) }}</span>
+                      </div>
+                      <div class="flex items-start gap-2">
+                        <i class="pi pi-send text-green-600 mt-0.5"></i>
+                        <span class="flex-1">{{ formatAddress(order.deliveryAddress) }}</span>
+                      </div>
+                      <div class="flex items-center gap-2 text-gray-500">
+                        <i class="pi pi-clock"></i>
+                        <span>{{ formatDate(order.createdAt) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-right sm:text-left">
+                    <p class="text-sm text-gray-500 mb-1">Phí vận chuyển</p>
+                    <p class="text-xl font-bold text-blue-600">{{ formatCurrency(order.shippingFee || 0) }}</p>
+                  </div>
+                </div>
+              </p-card>
+            </ng-container>
+          </div>
+        </p-tabPanel>
+
+        <!-- Tab Đã giao -->
+        <p-tabPanel [header]="'Đã giao (' + deliveredOrders().length + ')'">
+          <div *ngIf="isLoading()" class="space-y-4">
+            <p-skeleton height="120px" *ngFor="let i of [1, 2, 3]"></p-skeleton>
+          </div>
+
+          <div *ngIf="!isLoading() && deliveredOrders().length === 0" class="text-center py-12">
+            <i class="pi pi-inbox text-6xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">Chưa có đơn hàng nào hoàn thành</p>
+          </div>
+
+          <div *ngIf="!isLoading()" class="space-y-3">
+            <p-card *ngFor="let order of deliveredOrders()" styleClass="hover:shadow-lg transition-all cursor-pointer border-l-4 border-green-500" (click)="onViewDetail(order.id)">
+              <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="font-bold text-lg text-gray-800">{{ order.trackingNumber }}</span>
+                    <p-tag [value]="getStatusLabel(order.status)" [severity]="getStatusSeverity(order.status)"></p-tag>
+                  </div>
+                  <div class="space-y-2 text-sm text-gray-600">
+                    <div class="flex items-start gap-2">
+                      <i class="pi pi-map-marker text-blue-600 mt-0.5"></i>
+                      <span class="flex-1">{{ formatAddress(order.pickupAddress) }}</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <i class="pi pi-send text-green-600 mt-0.5"></i>
+                      <span class="flex-1">{{ formatAddress(order.deliveryAddress) }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-gray-500">
+                      <i class="pi pi-clock"></i>
+                      <span>{{ formatDate(order.createdAt) }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right sm:text-left">
+                  <p class="text-sm text-gray-500 mb-1">Phí vận chuyển</p>
+                  <p class="text-xl font-bold text-green-600">{{ formatCurrency(order.shippingFee || 0) }}</p>
+                </div>
+              </div>
+            </p-card>
+          </div>
+        </p-tabPanel>
+      </p-tabView>
+    </div>
+
+    <!-- Cancelled Orders Section -->
+    <div *ngIf="cancelledOrders().length > 0" class="mt-6">
+      <div class="flex items-center gap-2 mb-4">
+        <h2 class="text-xl font-bold text-gray-800">Đơn hàng đã hủy</h2>
+        <span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm font-medium">{{ cancelledOrders().length }}</span>
+      </div>
+
+      <div class="space-y-3">
+        <p-card *ngFor="let order of cancelledOrders()" styleClass="hover:shadow-lg transition-all cursor-pointer border-l-4 border-red-500" (click)="onViewDetail(order.id)">
+          <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-3">
+                <span class="font-bold text-lg text-gray-800">{{ order.trackingNumber }}</span>
+                <p-tag [value]="getStatusLabel(order.status)" [severity]="getStatusSeverity(order.status)"></p-tag>
+              </div>
+              <div class="space-y-2 text-sm text-gray-600">
+                <div class="flex items-start gap-2">
+                  <i class="pi pi-map-marker text-blue-600 mt-0.5"></i>
+                  <span class="flex-1">{{ formatAddress(order.pickupAddress) }}</span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <i class="pi pi-send text-green-600 mt-0.5"></i>
+                  <span class="flex-1">{{ formatAddress(order.deliveryAddress) }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-gray-500">
+                  <i class="pi pi-clock"></i>
+                  <span>{{ formatDate(order.createdAt) }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="text-right sm:text-left">
+              <p class="text-sm text-gray-500 mb-1">Phí vận chuyển</p>
+              <p class="text-xl font-bold text-gray-600">{{ formatCurrency(order.shippingFee || 0) }}</p>
+            </div>
+          </div>
+        </p-card>
+      </div>
+    </div>
+  </main>
+
+  <app-footer-nav></app-footer-nav>
+</div>

@@ -1,0 +1,159 @@
+<div class="p-6">
+  <p-toast />
+  <p-confirmDialog />
+
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Quản lý bài viết</h1>
+    <p class="text-gray-600">Quản lý tin tức và bài viết</p>
+  </div>
+
+  <!-- Filters & Actions -->
+  <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div class="col-span-1">
+        <span class="p-input-icon-left w-full">
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="filters.search"
+            (input)="onFilterChange()"
+            placeholder="Tìm kiếm bài viết..."
+            class="w-full"
+          />
+        </span>
+      </div>
+
+      <p-dropdown
+        [(ngModel)]="filters.type"
+        [options]="articleTypes"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Tất cả loại"
+        [showClear]="true"
+        (onChange)="onFilterChange()"
+        styleClass="w-full"
+      />
+
+      <p-dropdown
+        [(ngModel)]="filters.status"
+        [options]="statusOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Tất cả trạng thái"
+        [showClear]="true"
+        (onChange)="onFilterChange()"
+        styleClass="w-full"
+      />
+    </div>
+
+    <div class="flex justify-between items-center">
+      <div class="text-sm text-gray-600">
+        Tổng: <span class="font-semibold">{{ totalRecords }}</span> bài viết
+      </div>
+      <button
+        pButton
+        label="Tạo bài viết"
+        icon="pi pi-plus"
+        class="p-button-success"
+        (click)="openDialog()"
+      ></button>
+    </div>
+  </div>
+
+  <!-- Articles Table -->
+  <div class="bg-white rounded-lg shadow-sm">
+    <p-table
+      [value]="articles"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="10"
+      [totalRecords]="totalRecords"
+      [lazy]="true"
+      (onLazyLoad)="loadArticles($event)"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 3rem">#</th>
+          <th pSortableColumn="title">Tiêu đề <p-sortIcon field="title" /></th>
+          <th>Loại</th>
+          <th>Lượt xem</th>
+          <th>Trạng thái</th>
+          <th>Ngày</th>
+          <th style="width: 10rem">Thao tác</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-article let-rowIndex="rowIndex">
+        <tr>
+          <td>{{ rowIndex + 1 }}</td>
+          <td>
+            <div>
+              <div class="font-medium">{{ article.title }}</div>
+              <div class="text-xs text-gray-500 truncate max-w-md">
+                {{ article.excerpt }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="text-sm text-gray-600">
+              {{ getTypeLabel(article.type) }}
+            </span>
+          </td>
+          <td>
+            <span class="text-sm text-gray-600">
+              <i class="pi pi-eye mr-1"></i>{{ article.viewCount || 0 }}
+            </span>
+          </td>
+          <td>
+            <p-tag
+              [value]="getStatusLabel(article.status)"
+              [severity]="getStatusSeverity(article.status)"
+            />
+          </td>
+          <td>
+            <span class="text-xs text-gray-500">
+              {{ article.publishedAt ? (article.publishedAt | date: 'dd/MM/yyyy') : (article.createdAt | date: 'dd/MM/yyyy') }}
+            </span>
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-rounded p-button-text p-button-warning"
+                (click)="openDialog(article)"
+                pTooltip="Chỉnh sửa"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-rounded p-button-text p-button-danger"
+                (click)="confirmDelete(article)"
+                pTooltip="Xóa"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center py-8">
+            <i class="pi pi-inbox text-4xl text-gray-300 mb-3"></i>
+            <p class="text-gray-500">Không tìm thấy bài viết</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Article Form Dialog -->
+  <app-article-form
+    [(visible)]="displayDialog"
+    [article]="editingArticle"
+    (save)="saveArticle($event)"
+  />
+</div>

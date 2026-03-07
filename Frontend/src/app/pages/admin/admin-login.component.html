@@ -1,0 +1,103 @@
+<div class="dashboard-container flex flex-col min-h-screen">
+  <!-- Header Section -->
+  <header class="dashboard-header">
+    <div class="flex flex-col items-center justify-between text-center bg-primary text-white safe-p">
+      <div class="p-8">
+        <h2 class="text-white">Khu Vực Quản Lý</h2>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-main flex-grow bg-white">
+    <section class="summary-section">
+      <div class="summary-grid">
+        <div class="flex flex-col items-center justify-center">
+          <div class="w-full dark:bg-surface-900 py-20 px-8 sm:px-20" style="border-radius: 53px">
+            <!-- Title -->
+            <h4 class="text-primary mb-2"><i class="pi pi-shield mr-2" style="font-size: large"></i>Đăng nhập quản trị</h4>
+            <p class="text-gray-600 mb-6">Vui lòng nhập thông tin đăng nhập quản trị viên</p>
+
+            <!-- Login Form -->
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
+              <!-- Phone Input -->
+              <div class="flex flex-col gap-2">
+                <label for="phone" class="text-gray-700 font-medium"> Số điện thoại <span class="text-red-500">*</span> </label>
+                <input
+                  pInputText
+                  id="phone"
+                  type="tel"
+                  formControlName="phone"
+                  placeholder="Nhập số điện thoại"
+                  class="w-full md:w-[30rem]"
+                  [class.ng-invalid]="f['phone'].invalid && f['phone'].touched"
+                  [class.ng-dirty]="f['phone'].touched"
+                />
+                <small *ngIf="f['phone'].invalid && f['phone'].touched" class="text-red-500">
+                  {{ getErrorMessage('phone') }}
+                </small>
+              </div>
+
+              <!-- Password Input -->
+              <div class="flex flex-col gap-2">
+                <label for="password" class="text-gray-700 font-medium"> Mật khẩu <span class="text-red-500">*</span> </label>
+                <p-password
+                  id="password"
+                  formControlName="password"
+                  placeholder="Nhập mật khẩu"
+                  [toggleMask]="true"
+                  [feedback]="false"
+                  [fluid]="true"
+                  styleClass="w-full md:w-[30rem]"
+                  [inputStyleClass]="f['password'].invalid && f['password'].touched ? 'ng-invalid ng-dirty' : ''"
+                ></p-password>
+                <small *ngIf="f['password'].invalid && f['password'].touched" class="text-red-500">
+                  {{ getErrorMessage('password') }}
+                </small>
+              </div>
+
+              <!-- Server Error Message -->
+              <div *ngIf="loginForm.errors?.['serverError']" class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p class="text-red-600 text-sm flex items-center gap-2">
+                  <i class="pi pi-exclamation-circle"></i>
+                  {{ loginForm.errors?.['serverError'] }}
+                </p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer Navigation -->
+  <footer class="dashboard-footer">
+    <div class="flex flex-col justify-between text-center bg-primary text-white safe-p">
+      <div class="p-4 space-y-3">
+        <button
+          pButton
+          type="submit"
+          label="Đăng nhập"
+          icon="pi pi-sign-in"
+          class="w-full !bg-white !text-primary font-semibold py-3"
+          [loading]="isSubmitting"
+          [disabled]="isSubmitting || loginForm.invalid"
+          rounded="true"
+          severity="secondary"
+          (click)="onSubmit()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Quay về trang chủ"
+          icon="pi pi-home"
+          class="w-full font-semibold py-3"
+          rounded="true"
+          severity="contrast"
+          [disabled]="isSubmitting"
+          (click)="goToLanding()"
+        ></button>
+      </div>
+    </div>
+  </footer>
+</div>

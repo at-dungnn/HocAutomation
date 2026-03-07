@@ -1,0 +1,100 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [header]="article ? 'Chỉnh sửa bài viết' : 'Tạo bài viết mới'"
+  [modal]="true"
+  [style]="{ width: '900px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="!isSubmitting"
+>
+  <form [formGroup]="articleForm" (ngSubmit)="onSubmit()" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+    <!-- Title -->
+    <div class="space-y-2">
+      <label for="title" class="block text-sm font-medium text-gray-700"> Tiêu đề <span class="text-red-500">*</span> </label>
+      <input pInputText id="title" formControlName="title" class="w-full" placeholder="Nhập tiêu đề bài viết" [class.p-invalid]="f['title'].invalid && f['title'].touched" />
+      <small *ngIf="f['title'].invalid && f['title'].touched" class="text-red-500 text-xs">
+        {{ getErrorMessage('title') }}
+      </small>
+    </div>
+
+    <!-- Excerpt -->
+    <div class="space-y-2">
+      <label for="excerpt" class="block text-sm font-medium text-gray-700"> Tóm tắt <span class="text-red-500">*</span> </label>
+      <textarea
+        pInputTextarea
+        id="excerpt"
+        formControlName="excerpt"
+        rows="3"
+        class="w-full"
+        placeholder="Tóm tắt ngắn gọn về bài viết (10-500 ký tự)"
+        [class.p-invalid]="f['excerpt'].invalid && f['excerpt'].touched"
+      ></textarea>
+      <small *ngIf="f['excerpt'].invalid && f['excerpt'].touched" class="text-red-500 text-xs">
+        {{ getErrorMessage('excerpt') }}
+      </small>
+    </div>
+
+    <!-- Type & Status -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="space-y-2">
+        <label for="type" class="block text-sm font-medium text-gray-700"> Loại <span class="text-red-500">*</span> </label>
+        <p-dropdown
+          id="type"
+          formControlName="type"
+          [options]="articleTypes"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Chọn loại"
+          styleClass="w-full"
+          [class.p-invalid]="f['type'].invalid && f['type'].touched"
+        />
+        <small *ngIf="f['type'].invalid && f['type'].touched" class="text-red-500 text-xs">
+          {{ getErrorMessage('type') }}
+        </small>
+      </div>
+
+      <div class="space-y-2">
+        <label for="status" class="block text-sm font-medium text-gray-700"> Trạng thái <span class="text-red-500">*</span> </label>
+        <p-dropdown
+          id="status"
+          formControlName="status"
+          [options]="statusOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Chọn trạng thái"
+          styleClass="w-full"
+          [class.p-invalid]="f['status'].invalid && f['status'].touched"
+        />
+        <small *ngIf="f['status'].invalid && f['status'].touched" class="text-red-500 text-xs">
+          {{ getErrorMessage('status') }}
+        </small>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="space-y-2">
+      <label for="content" class="block text-sm font-medium text-gray-700"> Nội dung <span class="text-red-500">*</span> </label>
+      <textarea
+        pInputTextarea
+        id="content"
+        formControlName="content"
+        rows="12"
+        class="w-full"
+        placeholder="Nhập nội dung bài viết (tối thiểu 50 ký tự)..."
+        [class.p-invalid]="f['content'].invalid && f['content'].touched"
+      ></textarea>
+      <small class="text-gray-500 text-xs">Hỗ trợ Markdown và HTML</small>
+      <small *ngIf="f['content'].invalid && f['content'].touched" class="text-red-500 text-xs block">
+        {{ getErrorMessage('content') }}
+      </small>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <button pButton label="Hủy" icon="pi pi-times" class="p-button-text" (click)="onCancel()" [disabled]="isSubmitting"></button>
+      <button pButton [label]="article ? 'Cập nhật' : 'Tạo mới'" icon="pi pi-check" (click)="onSubmit()" [loading]="isSubmitting" [disabled]="articleForm.invalid || isSubmitting"></button>
+    </div>
+  </ng-template>
+</p-dialog>

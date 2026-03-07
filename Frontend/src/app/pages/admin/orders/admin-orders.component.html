@@ -1,0 +1,124 @@
+<div class="min-h-screen bg-gray-50">
+  <p-toast></p-toast>
+
+  <!-- Header -->
+  <header class="bg-primary text-white shadow-md">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <button pButton icon="pi pi-arrow-left" class="!bg-white !text-primary" rounded="true" (click)="goBack()"></button>
+          <div>
+            <h1 class="text-2xl font-bold">Quản lý đơn hàng</h1>
+            <p class="text-sm opacity-90">Theo dõi và quản lý tất cả đơn hàng</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <!-- Toolbar -->
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">Danh sách đơn hàng</h2>
+      </div>
+
+      <!-- Table -->
+      <p-table
+        [value]="orders"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} đơn hàng"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        styleClass="p-datatable-striped"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="id">Mã đơn <p-sortIcon field="id"></p-sortIcon></th>
+            <th pSortableColumn="customerName">Khách hàng <p-sortIcon field="customerName"></p-sortIcon></th>
+            <th>Shipper</th>
+            <th>Địa chỉ lấy hàng</th>
+            <th>Địa chỉ giao hàng</th>
+            <th pSortableColumn="status">Trạng thái <p-sortIcon field="status"></p-sortIcon></th>
+            <th pSortableColumn="totalAmount">Tổng tiền <p-sortIcon field="totalAmount"></p-sortIcon></th>
+            <th>Thao tác</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-order>
+          <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.customerName }}</td>
+            <td>{{ order.shipperName || 'Chưa có' }}</td>
+            <td>{{ order.pickupAddress }}</td>
+            <td>{{ order.deliveryAddress }}</td>
+            <td>
+              <p-tag [value]="getStatusLabel(order.status)" [severity]="getStatusSeverity(order.status)"></p-tag>
+            </td>
+            <td>{{ formatCurrency(order.totalAmount) }}</td>
+            <td>
+              <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-info" (click)="viewOrderDetail(order)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="8" class="text-center py-8 text-gray-500">Không có dữ liệu</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </main>
+
+  <!-- Order Detail Dialog -->
+  <p-dialog [(visible)]="displayDialog" header="Chi tiết đơn hàng" [modal]="true" [style]="{ width: '600px' }" [draggable]="false" [resizable]="false">
+    <div *ngIf="selectedOrder" class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <p class="text-gray-600 text-sm mb-1">Mã đơn hàng</p>
+          <p class="font-semibold">{{ selectedOrder.id }}</p>
+        </div>
+        <div>
+          <p class="text-gray-600 text-sm mb-1">Trạng thái</p>
+          <p-tag [value]="getStatusLabel(selectedOrder.status)" [severity]="getStatusSeverity(selectedOrder.status)"></p-tag>
+        </div>
+      </div>
+
+      <div>
+        <p class="text-gray-600 text-sm mb-1">Khách hàng</p>
+        <p class="font-semibold">{{ selectedOrder.customerName }}</p>
+      </div>
+
+      <div>
+        <p class="text-gray-600 text-sm mb-1">Shipper</p>
+        <p class="font-semibold">{{ selectedOrder.shipperName || 'Chưa có' }}</p>
+      </div>
+
+      <div>
+        <p class="text-gray-600 text-sm mb-1">Địa chỉ lấy hàng</p>
+        <p class="font-semibold">{{ selectedOrder.pickupAddress }}</p>
+      </div>
+
+      <div>
+        <p class="text-gray-600 text-sm mb-1">Địa chỉ giao hàng</p>
+        <p class="font-semibold">{{ selectedOrder.deliveryAddress }}</p>
+      </div>
+
+      <div>
+        <p class="text-gray-600 text-sm mb-1">Tổng tiền</p>
+        <p class="font-semibold text-green-600 text-xl">{{ formatCurrency(selectedOrder.totalAmount) }}</p>
+      </div>
+
+      <div>
+        <p class="text-gray-600 text-sm mb-1">Ngày tạo</p>
+        <p class="font-semibold">{{ formatDate(selectedOrder.createdAt) }}</p>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton label="Đóng" icon="pi pi-times" (click)="displayDialog = false"></button>
+    </ng-template>
+  </p-dialog>
+</div>

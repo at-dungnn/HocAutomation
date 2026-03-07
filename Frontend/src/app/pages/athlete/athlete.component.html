@@ -1,0 +1,100 @@
+<div class="bg-surface-0 dark:bg-surface-900">
+  <div id="home" class="landing-wrapper overflow-hidden">
+    <topbar-widget class="py-6 px-6 mx-0 md:mx-12 lg:mx-20 lg:px-20 flex items-center justify-between relative lg:static" />
+  </div>
+</div>
+<div class="row">
+  <div class="md:col-12 lg:col-12">
+    <div class="card">
+      <p-table
+        #dt2
+        [value]="customers"
+        dataKey="id"
+        [rows]="20"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [loading]="loading"
+        [paginator]="true"
+        [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
+        [tableStyle]="{ 'min-width': '75rem' }"
+      >
+        <ng-template #caption>
+          <div class="flex">
+            <p-iconfield iconPosition="left" class="ml-auto">
+              <p-inputicon>
+                <i class="pi pi-search"></i>
+              </p-inputicon>
+              <input pInputText type="text" placeholder="Tìm kiếm vận động viên" />
+            </p-iconfield>
+          </div>
+        </ng-template>
+
+        <ng-template #header>
+          <tr>
+            <th style="width: 30%">Tên vận động viên</th>
+            <th style="width: 25%">Tỉnh thành</th>
+            <th style="width: 25%">Giới tính</th>
+            <th style="width: 20%">Tích xanh</th>
+          </tr>
+          <tr>
+            <th>
+              <p-columnFilter type="text" field="name" placeholder="Tìm kiếm theo tên" ariaLabel="Filter Name"></p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter type="text" field="country.name" placeholder="Tìm kiếm theo tỉnh thành" ariaLabel="Filter Country"></p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter field="representative" matchMode="in" [showMenu]="false">
+                <ng-template #filter let-value let-filter="filterCallback">
+                  <p-multiselect [(ngModel)]="selectedRepresentatives" [options]="representatives" placeholder="Chọn giới tính" optionLabel="name" [panelStyle]="{ minWidth: '16rem' }">
+                    <ng-template let-option #item>
+                      <div class="flex items-center gap-2">
+                        <img [alt]="option.name" src="https://primefaces.org/cdn/primeng/images/demo/avatar/{{ option.image }}" style="width: 32px" />
+                        <span>{{ option.name }}</span>
+                      </div>
+                    </ng-template>
+                  </p-multiselect>
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter type="boolean" field="verified"></p-columnFilter>
+            </th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-customer>
+          <tr>
+            <td>{{ customer.name }}</td>
+            <td>
+              <div class="flex items-center gap-2">
+                <img src="https://primefaces.org/cdn/primeng/images/demo/flag/flag_placeholder.png" [class]="'flag flag-' + customer.country.code" style="width: 20px" />
+                <span>{{ customer.country.name }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="flex items-center gap-2">
+                <img [alt]="customer.representative.name" src="https://primefaces.org/cdn/primeng/images/demo/avatar/{{ customer.representative.image }}" width="32" />
+                <span>{{ customer.representative.name }}</span>
+              </div>
+            </td>
+            <td>
+              <i
+                class="pi"
+                [ngClass]="{
+                  'text-green-500 pi-check-circle': customer.verified,
+                  'text-red-500 pi-times-circle': !customer.verified
+                }"
+              ></i>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="4">No customers found.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>

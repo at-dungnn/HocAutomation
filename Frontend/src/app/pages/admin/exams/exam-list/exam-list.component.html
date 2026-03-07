@@ -1,0 +1,408 @@
+<div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <p-toast />
+  <p-confirmDialog />
+
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center gap-4 mb-4">
+      <button
+        pButton
+        icon="pi pi-arrow-left"
+        class="p-button-text p-button-secondary"
+        routerLink="/admin"
+        pTooltip="Quay lại"
+      ></button>
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Quản lý bài thi</h1>
+        <p class="text-gray-600 text-sm md:text-base">Tạo và quản lý các bài thi trắc nghiệm</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+      <!-- Filters -->
+      <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+        <p-dropdown
+          [(ngModel)]="selectedCategoryId"
+          [options]="categories"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Chọn danh mục"
+          [showClear]="true"
+          (onChange)="onFilter()"
+          styleClass="w-full sm:w-48"
+        />
+        <p-dropdown
+          [(ngModel)]="selectedType"
+          [options]="typeOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Loại bài thi"
+          (onChange)="onFilter()"
+          styleClass="w-full sm:w-40"
+        />
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-2 w-full md:w-auto">
+        <button
+          pButton
+          label="Tạo bài thi"
+          icon="pi pi-plus"
+          class="p-button-success flex-1 md:flex-none"
+          (click)="openNew()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exams Table -->
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <p-table
+      #dt
+      [value]="exams"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="rows"
+      [first]="first"
+      [totalRecords]="totalRecords"
+      [lazy]="true"
+      (onLazyLoad)="onPageChange($event)"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Hiển thị {first} - {last} / {totalRecords} bài thi"
+      styleClass="p-datatable-sm"
+      [tableStyle]="{ 'min-width': '100%' }"
+      [scrollable]="true"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 60px" class="text-center">STT</th>
+          <th style="min-width: 200px">TÊN BÀI THI</th>
+          <th style="min-width: 150px">DANH MỤC</th>
+          <th style="min-width: 150px">KHÓA HỌC</th>
+          <th style="width: 100px" class="text-center">LOẠI</th>
+          <th style="width: 80px" class="text-center">SỐ CÂU</th>
+          <th style="width: 100px" class="text-center">THỜI GIAN</th>
+          <th style="width: 80px" class="text-center">ĐIỂM ĐẬU</th>
+          <th style="width: 100px" class="text-center">TRẠNG THÁI</th>
+          <th style="width: 90px" class="text-center">CÔNG KHAI</th>
+          <th style="width: 120px" class="text-center">THAO TÁC</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-e let-rowIndex="rowIndex">
+        <tr>
+          <td class="text-center font-medium">{{ first + rowIndex + 1 }}</td>
+          <td>
+            <div class="font-medium text-gray-800">{{ e.title }}</div>
+            <div *ngIf="e.description" class="text-xs text-gray-500 truncate max-w-xs">
+              {{ e.description }}
+            </div>
+          </td>
+          <td>
+            <span class="text-sm text-gray-600">{{ getCategoryName(e.categoryId) }}</span>
+          </td>
+          <td>
+            <span class="text-sm text-gray-600">{{ getCourseName(e.courseId) }}</span>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="getTypeLabel(e.type)"
+              [severity]="getTypeSeverity(e.type)"
+            />
+          </td>
+          <td class="text-center">
+            <span class="font-semibold text-blue-600">{{ e.totalQuestions }}</span>
+          </td>
+          <td class="text-center">
+            <span class="text-sm">
+              <i class="pi pi-clock mr-1 text-gray-400"></i>
+              {{ formatDuration(e.duration) }}
+            </span>
+          </td>
+          <td class="text-center">
+            <span class="font-semibold text-green-600">{{ e.passingScore }}%</span>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="e.isActive ? 'Hoạt động' : 'Tắt'"
+              [severity]="e.isActive ? 'success' : 'secondary'"
+            />
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="e.isPublic ? 'Công khai' : 'Riêng tư'"
+              [severity]="e.isPublic ? 'info' : 'secondary'"
+            />
+          </td>
+          <td class="text-center">
+            <div class="flex gap-1 justify-center">
+              <button
+                pButton
+                icon="pi pi-play"
+                class="p-button-rounded p-button-text p-button-info p-button-sm"
+                [routerLink]="['/exam', e.id]"
+                pTooltip="Vào thi"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-rounded p-button-text p-button-warning p-button-sm"
+                (click)="editExam(e)"
+                pTooltip="Sửa"
+              ></button>
+              <button
+                pButton
+                [icon]="e.isActive ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                class="p-button-rounded p-button-text p-button-sm"
+                [class.p-button-success]="!e.isActive"
+                [class.p-button-secondary]="e.isActive"
+                (click)="toggleActive(e)"
+                [pTooltip]="e.isActive ? 'Tắt' : 'Bật'"
+              ></button>
+              <button
+                pButton
+                [icon]="e.isPublic ? 'pi pi-lock' : 'pi pi-lock-open'"
+                class="p-button-rounded p-button-text p-button-sm"
+                [class.p-button-info]="!e.isPublic"
+                [class.p-button-secondary]="e.isPublic"
+                (click)="togglePublic(e)"
+                [pTooltip]="e.isPublic ? 'Đặt riêng tư' : 'Công khai'"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                (click)="deleteExam(e)"
+                pTooltip="Xóa"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="11" class="text-center py-12">
+            <div class="flex flex-col items-center">
+              <i class="pi pi-inbox text-5xl text-gray-300 mb-4"></i>
+              <p class="text-gray-500 text-lg">Chưa có bài thi nào</p>
+              <p class="text-gray-400 text-sm">Nhấn "Tạo bài thi" để bắt đầu</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Exam Dialog -->
+  <p-dialog
+    [(visible)]="examDialog"
+    [header]="isEditMode ? 'Chỉnh sửa bài thi' : 'Tạo bài thi mới'"
+    [modal]="true"
+    [style]="{ width: '95vw', maxWidth: '700px' }"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="p-fluid"
+  >
+    <div class="space-y-5">
+      <!-- Title -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Tên bài thi <span class="text-red-500">*</span>
+        </label>
+        <input
+          pInputText
+          [(ngModel)]="exam.title"
+          class="w-full"
+          placeholder="Nhập tên bài thi"
+        />
+      </div>
+
+      <!-- Category & Course Selection -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Danh mục <span class="text-red-500">*</span>
+          </label>
+          <p-dropdown
+            [(ngModel)]="exam.categoryId"
+            [options]="categories"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Chọn danh mục"
+            (onChange)="onFormCategoryChange()"
+            styleClass="w-full"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Khóa học
+          </label>
+          <p-dropdown
+            [(ngModel)]="exam.courseId"
+            [options]="filteredCourses"
+            optionLabel="title"
+            optionValue="id"
+            placeholder="{{ exam.categoryId ? 'Chọn khóa học (tùy chọn)' : 'Chọn danh mục trước' }}"
+            [disabled]="!exam.categoryId"
+            [showClear]="true"
+            (onChange)="onFormCourseChange()"
+            styleClass="w-full"
+          />
+          <small class="text-gray-500">Để trống để lấy câu hỏi từ tất cả khóa học</small>
+        </div>
+      </div>
+
+      <!-- Available Questions Info -->
+      <div *ngIf="exam.categoryId" class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-info-circle text-blue-500"></i>
+          <span class="text-blue-700">
+            Có <strong>{{ availableQuestions }}</strong> câu hỏi trong ngân hàng
+          </span>
+        </div>
+      </div>
+
+      <!-- Type & Question Count -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Loại bài thi <span class="text-red-500">*</span>
+          </label>
+          <p-dropdown
+            [(ngModel)]="exam.type"
+            [options]="typeFormOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Chọn loại"
+            styleClass="w-full"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Số câu hỏi <span class="text-red-500">*</span>
+          </label>
+          <p-inputNumber
+            [(ngModel)]="exam.questionCount"
+            [min]="1"
+            [max]="availableQuestions || 1000"
+            placeholder="Nhập số câu hỏi"
+            styleClass="w-full"
+          />
+          <small *ngIf="exam.questionCount > availableQuestions" class="text-red-500">
+            Vượt quá số câu hỏi có sẵn!
+          </small>
+        </div>
+      </div>
+
+      <!-- Duration & Passing Score -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Thời gian làm bài (phút) <span class="text-red-500">*</span>
+          </label>
+          <p-inputNumber
+            [(ngModel)]="exam.duration"
+            [min]="1"
+            [max]="300"
+            placeholder="60"
+            styleClass="w-full"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Điểm đậu (%) <span class="text-red-500">*</span>
+          </label>
+          <p-inputNumber
+            [(ngModel)]="exam.passingScore"
+            [min]="0"
+            [max]="100"
+            suffix="%"
+            placeholder="70"
+            styleClass="w-full"
+          />
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Mô tả
+        </label>
+        <textarea
+          pInputText
+          [(ngModel)]="exam.description"
+          rows="2"
+          class="w-full p-3 border border-gray-300 rounded-lg"
+          placeholder="Mô tả ngắn về bài thi..."
+        ></textarea>
+      </div>
+
+      <!-- Instructions -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Hướng dẫn làm bài
+        </label>
+        <textarea
+          pInputText
+          [(ngModel)]="exam.instructions"
+          rows="3"
+          class="w-full p-3 border border-gray-300 rounded-lg"
+          placeholder="Nhập hướng dẫn cho thí sinh..."
+        ></textarea>
+      </div>
+
+      <!-- Options -->
+      <div class="flex flex-wrap gap-4">
+        <div class="flex items-center gap-2">
+          <p-checkbox
+            [(ngModel)]="exam.randomize"
+            [binary]="true"
+            inputId="randomize"
+          />
+          <label for="randomize" class="text-sm text-gray-700">Xáo trộn câu hỏi</label>
+        </div>
+        <div class="flex items-center gap-2">
+          <p-checkbox
+            [(ngModel)]="exam.isPublic"
+            [binary]="true"
+            inputId="isPublic"
+          />
+          <label for="isPublic" class="text-sm text-gray-700">Công khai (miễn phí)</label>
+        </div>
+        <div class="flex items-center gap-2">
+          <p-checkbox
+            [(ngModel)]="exam.isPremium"
+            [binary]="true"
+            inputId="isPremium"
+          />
+          <label for="isPremium" class="text-sm text-gray-700">Premium</label>
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex gap-2 justify-end">
+        <button
+          pButton
+          label="Hủy"
+          icon="pi pi-times"
+          class="p-button-text p-button-secondary"
+          (click)="hideDialog()"
+        ></button>
+        <button
+          pButton
+          [label]="isEditMode ? 'Cập nhật' : 'Tạo bài thi'"
+          icon="pi pi-check"
+          class="p-button-success"
+          (click)="saveExam()"
+          [loading]="saving"
+        ></button>
+      </div>
+    </ng-template>
+  </p-dialog>
+</div>

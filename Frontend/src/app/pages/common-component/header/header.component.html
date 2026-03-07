@@ -1,0 +1,67 @@
+<header class="text-white shadow-lg sticky top-0 z-50" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)">
+  <div class="max-w-7xl mx-auto px-4 py-3">
+    <div class="flex items-center justify-between">
+      <!-- Logo -->
+      <div class="flex items-center gap-3">
+        <div class="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+          <i class="pi pi-truck text-2xl"></i>
+        </div>
+        <h1 class="text-xl font-bold">Giao Hàng Nhanh</h1>
+      </div>
+
+      <!-- User Info & Actions -->
+      <div class="flex items-center gap-3">
+        <!-- Role Badge -->
+        <div class="hidden md:flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
+          <i [class]="'pi ' + getRoleIcon() + ' text-sm'"></i>
+          <span class="text-sm font-medium">{{ getRoleLabel() }}</span>
+        </div>
+
+        <!-- User Menu -->
+        <button pButton [text]="true" [rounded]="true" class="text-white" (click)="userPanel.toggle($event)">
+          <p-avatar icon="pi pi-user" styleClass="bg-white/20 text-white" shape="circle"></p-avatar>
+        </button>
+
+        <!-- User Panel -->
+        <p-overlayPanel #userPanel>
+          <div class="w-64">
+            <!-- User Info -->
+            <div class="p-3 border-b border-gray-200">
+              <div class="flex items-center gap-3 mb-2">
+                <p-avatar icon="pi pi-user" styleClass="bg-primary text-white" shape="circle"></p-avatar>
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-gray-800 truncate">{{ userEmail || 'User' }}</p>
+                  <p class="text-sm text-gray-500">{{ getRoleLabel() }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Menu Items -->
+            <div class="py-2">
+              <button class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-3 text-gray-700" routerLink="/dashboard">
+                <i class="pi pi-home"></i>
+                <span>Trang chủ</span>
+              </button>
+              <button class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-3 text-gray-700" routerLink="/profile">
+                <i class="pi pi-user"></i>
+                <span>Hồ sơ</span>
+              </button>
+              <button class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-3 text-gray-700" routerLink="/settings">
+                <i class="pi pi-cog"></i>
+                <span>Cài đặt</span>
+              </button>
+            </div>
+
+            <!-- Logout -->
+            <div class="border-t border-gray-200 pt-2">
+              <button class="w-full text-left px-4 py-2 hover:bg-red-50 flex items-center gap-3 text-red-600 font-medium" (click)="onLogout(); userPanel.hide()">
+                <i class="pi pi-sign-out"></i>
+                <span>Đăng xuất</span>
+              </button>
+            </div>
+          </div>
+        </p-overlayPanel>
+      </div>
+    </div>
+  </div>
+</header>

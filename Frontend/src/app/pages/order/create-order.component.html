@@ -1,0 +1,395 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <app-header></app-header>
+
+  <!-- Main Content -->
+  <main class="p-3 sm:p-4 pb-24 max-w-2xl mx-auto w-full">
+    <!-- Page Title -->
+    <div class="mb-4 sm:mb-6">
+      <h1 class="text-xl sm:text-2xl font-bold text-gray-800 mb-1 sm:mb-2">Tạo đơn hàng mới</h1>
+      <p class="text-sm sm:text-base text-gray-600">Vui lòng điền đầy đủ thông tin để tạo đơn hàng</p>
+    </div>
+
+    <!-- Steps - Hidden on mobile, shown on tablet+ -->
+    <div class="hidden sm:block mb-6">
+      <p-steps [model]="steps" [activeIndex]="currentStep" [readonly]="true" styleClass="mb-4"></p-steps>
+    </div>
+
+    <!-- Mobile Step Indicator -->
+    <div class="sm:hidden mb-4 flex items-center justify-center gap-2">
+      <div *ngFor="let step of steps; let i = index" class="flex items-center">
+        <div
+          class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors"
+          [class.bg-primary]="i === currentStep"
+          [class.text-white]="i === currentStep"
+          [class.bg-gray-200]="i !== currentStep"
+          [class.text-gray-600]="i !== currentStep"
+        >
+          {{ i + 1 }}
+        </div>
+        <div *ngIf="i < steps.length - 1" class="w-8 h-0.5 bg-gray-200 mx-1"></div>
+      </div>
+    </div>
+
+    <!-- Current Step Title (Mobile) -->
+    <div class="sm:hidden mb-4 text-center">
+      <p class="text-sm font-semibold text-primary">{{ steps[currentStep].label }}</p>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="orderForm" (ngSubmit)="onSubmit()">
+      <!-- Step 1: Pickup Address -->
+      <div *ngIf="currentStep === 0" class="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+        <h2 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <i class="pi pi-map-marker text-primary text-lg sm:text-xl"></i>
+          <span>Địa chỉ lấy hàng</span>
+        </h2>
+
+        <div class="space-y-3 sm:space-y-4">
+          <div class="flex flex-col gap-1.5 sm:gap-2">
+            <label for="pickupStreet" class="text-sm sm:text-base text-gray-700 font-medium"> Địa chỉ cụ thể <span class="text-red-500">*</span> </label>
+            <input
+              pInputText
+              id="pickupStreet"
+              formControlName="pickupStreet"
+              placeholder="Số nhà, tên đường"
+              class="w-full text-sm sm:text-base"
+              [class.ng-invalid]="f['pickupStreet'].invalid && f['pickupStreet'].touched"
+            />
+            <small *ngIf="f['pickupStreet'].invalid && f['pickupStreet'].touched" class="text-xs sm:text-sm text-red-500">
+              {{ getErrorMessage('pickupStreet') }}
+            </small>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div class="flex flex-col gap-1.5 sm:gap-2">
+              <label for="pickupWard" class="text-sm sm:text-base text-gray-700 font-medium"> Phường/Xã <span class="text-red-500">*</span> </label>
+              <input
+                pInputText
+                id="pickupWard"
+                formControlName="pickupWard"
+                placeholder="Nhập phường/xã"
+                class="w-full text-sm sm:text-base"
+                [class.ng-invalid]="f['pickupWard'].invalid && f['pickupWard'].touched"
+              />
+              <small *ngIf="f['pickupWard'].invalid && f['pickupWard'].touched" class="text-xs sm:text-sm text-red-500">
+                {{ getErrorMessage('pickupWard') }}
+              </small>
+            </div>
+
+            <div class="flex flex-col gap-1.5 sm:gap-2">
+              <label for="pickupDistrict" class="text-sm sm:text-base text-gray-700 font-medium"> Quận/Huyện <span class="text-red-500">*</span> </label>
+              <input
+                pInputText
+                id="pickupDistrict"
+                formControlName="pickupDistrict"
+                placeholder="Nhập quận/huyện"
+                class="w-full text-sm sm:text-base"
+                [class.ng-invalid]="f['pickupDistrict'].invalid && f['pickupDistrict'].touched"
+              />
+              <small *ngIf="f['pickupDistrict'].invalid && f['pickupDistrict'].touched" class="text-xs sm:text-sm text-red-500">
+                {{ getErrorMessage('pickupDistrict') }}
+              </small>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5 sm:gap-2">
+            <label for="pickupCity" class="text-sm sm:text-base text-gray-700 font-medium"> Tỉnh/Thành phố <span class="text-red-500">*</span> </label>
+            <input
+              pInputText
+              id="pickupCity"
+              formControlName="pickupCity"
+              placeholder="Nhập tỉnh/thành phố"
+              class="w-full text-sm sm:text-base"
+              [class.ng-invalid]="f['pickupCity'].invalid && f['pickupCity'].touched"
+            />
+            <small *ngIf="f['pickupCity'].invalid && f['pickupCity'].touched" class="text-xs sm:text-sm text-red-500">
+              {{ getErrorMessage('pickupCity') }}
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Delivery Address -->
+      <div *ngIf="currentStep === 1" class="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+        <h2 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <i class="pi pi-send text-primary text-lg sm:text-xl"></i>
+          <span>Địa chỉ giao hàng</span>
+        </h2>
+
+        <div class="space-y-3 sm:space-y-4">
+          <div class="flex flex-col gap-1.5 sm:gap-2">
+            <label for="deliveryStreet" class="text-sm sm:text-base text-gray-700 font-medium"> Địa chỉ cụ thể <span class="text-red-500">*</span> </label>
+            <input
+              pInputText
+              id="deliveryStreet"
+              formControlName="deliveryStreet"
+              placeholder="Số nhà, tên đường"
+              class="w-full text-sm sm:text-base"
+              [class.ng-invalid]="f['deliveryStreet'].invalid && f['deliveryStreet'].touched"
+            />
+            <small *ngIf="f['deliveryStreet'].invalid && f['deliveryStreet'].touched" class="text-xs sm:text-sm text-red-500">
+              {{ getErrorMessage('deliveryStreet') }}
+            </small>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div class="flex flex-col gap-1.5 sm:gap-2">
+              <label for="deliveryWard" class="text-sm sm:text-base text-gray-700 font-medium"> Phường/Xã <span class="text-red-500">*</span> </label>
+              <input
+                pInputText
+                id="deliveryWard"
+                formControlName="deliveryWard"
+                placeholder="Nhập phường/xã"
+                class="w-full text-sm sm:text-base"
+                [class.ng-invalid]="f['deliveryWard'].invalid && f['deliveryWard'].touched"
+              />
+              <small *ngIf="f['deliveryWard'].invalid && f['deliveryWard'].touched" class="text-xs sm:text-sm text-red-500">
+                {{ getErrorMessage('deliveryWard') }}
+              </small>
+            </div>
+
+            <div class="flex flex-col gap-1.5 sm:gap-2">
+              <label for="deliveryDistrict" class="text-sm sm:text-base text-gray-700 font-medium"> Quận/Huyện <span class="text-red-500">*</span> </label>
+              <input
+                pInputText
+                id="deliveryDistrict"
+                formControlName="deliveryDistrict"
+                placeholder="Nhập quận/huyện"
+                class="w-full text-sm sm:text-base"
+                [class.ng-invalid]="f['deliveryDistrict'].invalid && f['deliveryDistrict'].touched"
+              />
+              <small *ngIf="f['deliveryDistrict'].invalid && f['deliveryDistrict'].touched" class="text-xs sm:text-sm text-red-500">
+                {{ getErrorMessage('deliveryDistrict') }}
+              </small>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5 sm:gap-2">
+            <label for="deliveryCity" class="text-sm sm:text-base text-gray-700 font-medium"> Tỉnh/Thành phố <span class="text-red-500">*</span> </label>
+            <input
+              pInputText
+              id="deliveryCity"
+              formControlName="deliveryCity"
+              placeholder="Nhập tỉnh/thành phố"
+              class="w-full text-sm sm:text-base"
+              [class.ng-invalid]="f['deliveryCity'].invalid && f['deliveryCity'].touched"
+            />
+            <small *ngIf="f['deliveryCity'].invalid && f['deliveryCity'].touched" class="text-xs sm:text-sm text-red-500">
+              {{ getErrorMessage('deliveryCity') }}
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Package Details -->
+      <div *ngIf="currentStep === 2" class="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+        <h2 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <i class="pi pi-box text-primary text-lg sm:text-xl"></i>
+          <span>Thông tin hàng hóa</span>
+        </h2>
+
+        <div class="space-y-3 sm:space-y-4">
+          <div class="flex flex-col gap-1.5 sm:gap-2">
+            <label for="packageDescription" class="text-sm sm:text-base text-gray-700 font-medium"> Mô tả hàng hóa <span class="text-red-500">*</span> </label>
+            <textarea
+              pInputTextarea
+              id="packageDescription"
+              formControlName="packageDescription"
+              placeholder="Ví dụ: Sách, quần áo, điện tử..."
+              rows="3"
+              class="w-full text-sm sm:text-base"
+              [class.ng-invalid]="f['packageDescription'].invalid && f['packageDescription'].touched"
+            ></textarea>
+            <small *ngIf="f['packageDescription'].invalid && f['packageDescription'].touched" class="text-xs sm:text-sm text-red-500">
+              {{ getErrorMessage('packageDescription') }}
+            </small>
+          </div>
+
+          <div class="flex flex-col gap-1.5 sm:gap-2">
+            <label for="packageWeight" class="text-sm sm:text-base text-gray-700 font-medium"> Khối lượng (kg) <span class="text-red-500">*</span> </label>
+            <p-inputNumber
+              inputId="packageWeight"
+              formControlName="packageWeight"
+              [min]="0.1"
+              [step]="0.1"
+              [minFractionDigits]="1"
+              [maxFractionDigits]="2"
+              placeholder="0.0"
+              styleClass="w-full"
+              inputStyleClass="text-sm sm:text-base"
+            ></p-inputNumber>
+            <small *ngIf="f['packageWeight'].invalid && f['packageWeight'].touched" class="text-xs sm:text-sm text-red-500">
+              {{ getErrorMessage('packageWeight') }}
+            </small>
+          </div>
+
+          <div class="flex flex-col gap-2 sm:gap-4">
+            <div class="flex flex-col gap-1.5 sm:gap-2">
+              <label for="packageLength" class="text-xs sm:text-sm text-gray-700 font-medium"> Dài (cm) <span class="text-red-500">*</span> </label>
+              <p-inputNumber inputId="packageLength" formControlName="packageLength" [min]="1" placeholder="0" styleClass="w-full" inputStyleClass="text-sm sm:text-base"></p-inputNumber>
+              <small *ngIf="f['packageLength'].invalid && f['packageLength'].touched" class="text-xs text-red-500">
+                {{ getErrorMessage('packageLength') }}
+              </small>
+            </div>
+
+            <div class="flex flex-col gap-1.5 sm:gap-2">
+              <label for="packageWidth" class="text-xs sm:text-sm text-gray-700 font-medium"> Rộng (cm) <span class="text-red-500">*</span> </label>
+              <p-inputNumber inputId="packageWidth" formControlName="packageWidth" [min]="1" placeholder="0" styleClass="w-full" inputStyleClass="text-sm sm:text-base"></p-inputNumber>
+              <small *ngIf="f['packageWidth'].invalid && f['packageWidth'].touched" class="text-xs text-red-500">
+                {{ getErrorMessage('packageWidth') }}
+              </small>
+            </div>
+
+            <div class="flex flex-col gap-1.5 sm:gap-2">
+              <label for="packageHeight" class="text-xs sm:text-sm text-gray-700 font-medium"> Cao (cm) <span class="text-red-500">*</span> </label>
+              <p-inputNumber inputId="packageHeight" formControlName="packageHeight" [min]="1" placeholder="0" styleClass="w-full" inputStyleClass="text-sm sm:text-base"></p-inputNumber>
+              <small *ngIf="f['packageHeight'].invalid && f['packageHeight'].touched" class="text-xs text-red-500">
+                {{ getErrorMessage('packageHeight') }}
+              </small>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5 sm:gap-2">
+            <label for="packageValue" class="text-sm sm:text-base text-gray-700 font-medium"> Giá trị hàng hóa (VNĐ) <span class="text-red-500">*</span> </label>
+            <p-inputNumber
+              inputId="packageValue"
+              formControlName="packageValue"
+              [min]="1000"
+              mode="currency"
+              currency="VND"
+              locale="vi-VN"
+              placeholder="0"
+              styleClass="w-full"
+              inputStyleClass="text-sm sm:text-base"
+            ></p-inputNumber>
+            <small *ngIf="f['packageValue'].invalid && f['packageValue'].touched" class="text-xs sm:text-sm text-red-500">
+              {{ getErrorMessage('packageValue') }}
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Recipient Info -->
+      <div *ngIf="currentStep === 3" class="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+        <h2 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <i class="pi pi-user text-primary text-lg sm:text-xl"></i>
+          <span>Thông tin người nhận</span>
+        </h2>
+
+        <div class="space-y-3 sm:space-y-4">
+          <div class="flex flex-col gap-1.5 sm:gap-2">
+            <label for="recipientName" class="text-sm sm:text-base text-gray-700 font-medium"> Họ và tên <span class="text-red-500">*</span> </label>
+            <input
+              pInputText
+              id="recipientName"
+              formControlName="recipientName"
+              placeholder="Nhập họ và tên người nhận"
+              class="w-full text-sm sm:text-base"
+              [class.ng-invalid]="f['recipientName'].invalid && f['recipientName'].touched"
+            />
+            <small *ngIf="f['recipientName'].invalid && f['recipientName'].touched" class="text-xs sm:text-sm text-red-500">
+              {{ getErrorMessage('recipientName') }}
+            </small>
+          </div>
+
+          <div class="flex flex-col gap-1.5 sm:gap-2">
+            <label for="recipientPhone" class="text-sm sm:text-base text-gray-700 font-medium"> Số điện thoại <span class="text-red-500">*</span> </label>
+            <input
+              pInputText
+              id="recipientPhone"
+              formControlName="recipientPhone"
+              placeholder="Nhập số điện thoại người nhận"
+              class="w-full text-sm sm:text-base"
+              [class.ng-invalid]="f['recipientPhone'].invalid && f['recipientPhone'].touched"
+            />
+            <small *ngIf="f['recipientPhone'].invalid && f['recipientPhone'].touched" class="text-xs sm:text-sm text-red-500">
+              {{ getErrorMessage('recipientPhone') }}
+            </small>
+          </div>
+
+          <div class="flex flex-col gap-1.5 sm:gap-2">
+            <label for="recipientEmail" class="text-sm sm:text-base text-gray-700 font-medium">Email (Tùy chọn)</label>
+            <input
+              pInputText
+              id="recipientEmail"
+              formControlName="recipientEmail"
+              placeholder="Nhập email người nhận"
+              class="w-full text-sm sm:text-base"
+              [class.ng-invalid]="f['recipientEmail'].invalid && f['recipientEmail'].touched"
+            />
+            <small *ngIf="f['recipientEmail'].invalid && f['recipientEmail'].touched" class="text-xs sm:text-sm text-red-500">
+              {{ getErrorMessage('recipientEmail') }}
+            </small>
+          </div>
+
+          <div class="flex flex-col gap-1.5 sm:gap-2">
+            <label for="deliveryInstructions" class="text-sm sm:text-base text-gray-700 font-medium">Ghi chú giao hàng (Tùy chọn)</label>
+            <textarea
+              pInputTextarea
+              id="deliveryInstructions"
+              formControlName="deliveryInstructions"
+              placeholder="Ví dụ: Gọi trước khi giao, giao giờ hành chính..."
+              rows="3"
+              class="w-full text-sm sm:text-base"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Server Error -->
+      <div *ngIf="orderForm.errors?.['serverError']" class="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div class="flex items-center gap-2 text-red-600 text-sm sm:text-base">
+          <i class="pi pi-exclamation-circle"></i>
+          <span>{{ orderForm.errors?.['serverError'] }}</span>
+        </div>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+        <!-- Primary Actions Row -->
+        <div class="flex gap-2 sm:gap-3 flex-1">
+          <button
+            *ngIf="currentStep > 0"
+            pButton
+            type="button"
+            label="Quay lại"
+            icon="pi pi-arrow-left"
+            class="flex-1 text-sm sm:text-base py-2.5 sm:py-3"
+            [outlined]="true"
+            (click)="prevStep()"
+            [disabled]="isSubmitting"
+          ></button>
+
+          <button
+            *ngIf="currentStep < 3"
+            pButton
+            type="button"
+            label="Tiếp theo"
+            icon="pi pi-arrow-right"
+            iconPos="right"
+            class="flex-1 text-sm sm:text-base py-2.5 sm:py-3"
+            (click)="nextStep()"
+          ></button>
+
+          <button
+            *ngIf="currentStep === 3"
+            pButton
+            type="submit"
+            label="Tạo đơn hàng"
+            icon="pi pi-check"
+            class="flex-1 text-sm sm:text-base py-2.5 sm:py-3"
+            [loading]="isSubmitting"
+            [disabled]="isSubmitting || orderForm.invalid"
+          ></button>
+        </div>
+
+        <!-- Cancel Button -->
+        <button pButton type="button" label="Hủy" severity="danger" class="w-full sm:w-auto text-sm sm:text-base py-2.5 sm:py-3" (click)="onCancel()" [disabled]="isSubmitting"></button>
+      </div>
+    </form>
+  </main>
+
+  <!-- Footer -->
+  <app-footer-nav></app-footer-nav>
+</div>

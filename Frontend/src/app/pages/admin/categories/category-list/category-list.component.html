@@ -1,0 +1,195 @@
+<div class="card">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <p-toolbar styleClass="mb-4 gap-2">
+    <ng-template pTemplate="left">
+      <div class="flex items-center gap-3">
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          routerLink="/admin"
+          pTooltip="Quay lại"
+          tooltipPosition="right"
+        ></p-button>
+        <h2 class="text-2xl font-bold m-0">Quản lý Danh mục</h2>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="right">
+      <p-button label="Thêm danh mục" icon="pi pi-plus" severity="success" (onClick)="openNew()"></p-button>
+    </ng-template>
+  </p-toolbar>
+
+  <p-table
+    #dt
+    [value]="categories"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[5, 10, 25, 50]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} danh mục"
+    [globalFilterFields]="['name', 'type', 'description']"
+    styleClass="p-datatable-striped"
+    [tableStyle]="{ 'min-width': '60rem' }"
+  >
+    <ng-template pTemplate="caption">
+      <div class="flex flex-wrap justify-between items-center gap-2">
+        <span class="p-input-icon-left">
+          <input pInputText type="text" (input)="onGlobalFilter($event)" placeholder="Tìm kiếm danh mục..." class="w-full sm:w-auto" />
+        </span>
+        <p-button label="Làm mới" icon="pi pi-refresh" [text]="true" (onClick)="loadCategories()"></p-button>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 4rem">#</th>
+        <th pSortableColumn="name" style="min-width: 14rem">Tên danh mục <p-sortIcon field="name"></p-sortIcon></th>
+        <th pSortableColumn="type" style="min-width: 10rem">Loại <p-sortIcon field="type"></p-sortIcon></th>
+        <th pSortableColumn="order" style="width: 8rem">Thứ tự <p-sortIcon field="order"></p-sortIcon></th>
+        <th style="width: 10rem">Trạng thái</th>
+        <th style="width: 10rem">Thao tác</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-category let-rowIndex="rowIndex">
+      <tr>
+        <td>{{ rowIndex + 1 }}</td>
+        <td>
+          <div class="flex flex-col">
+            <span class="font-semibold text-gray-900">{{ category.name }}</span>
+            <span *ngIf="category.description" class="text-sm text-gray-500 mt-1 line-clamp-2">{{ category.description }}</span>
+          </div>
+        </td>
+        <td>
+          <p-tag [value]="getCategoryTypeLabel(category.type)" [severity]="getCategoryTypeSeverity(category.type)"></p-tag>
+        </td>
+        <td class="text-center">
+          <span class="font-mono">{{ category.order }}</span>
+        </td>
+        <td>
+          <p-tag
+            [value]="category.isActive ? 'Hoạt động' : 'Vô hiệu'"
+            [severity]="category.isActive ? 'success' : 'danger'"
+            [style]="{ cursor: 'pointer' }"
+            (click)="toggleStatus(category)"
+            pTooltip="Click để thay đổi trạng thái"
+          ></p-tag>
+        </td>
+        <td>
+          <div class="flex gap-2 justify-center">
+            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" (onClick)="editCategory(category)" pTooltip="Chỉnh sửa" tooltipPosition="top"></p-button>
+            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="deleteCategory(category)" pTooltip="Xóa" tooltipPosition="top"></p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="text-center py-8">
+          <div class="flex flex-col items-center text-gray-500">
+            <i class="pi pi-inbox text-5xl mb-3"></i>
+            <p class="text-lg">Chưa có danh mục nào</p>
+            <p class="text-sm">Nhấn "Thêm danh mục" để tạo mới</p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="loadingbody">
+      <tr>
+        <td colspan="6" class="text-center py-8">
+          <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+          <p class="mt-2 text-gray-500">Đang tải dữ liệu...</p>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Dialog Form -->
+  <p-dialog
+    [(visible)]="categoryDialog"
+    [header]="isEditMode ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới'"
+    [modal]="true"
+    [style]="{ width: '500px' }"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="!saving"
+  >
+    <div class="flex flex-col gap-4">
+      <!-- Name -->
+      <div class="flex flex-col gap-2">
+        <label for="name" class="font-semibold"> Tên danh mục <span class="text-red-500">*</span> </label>
+        <input pInputText id="name" [(ngModel)]="category.name" placeholder="Nhập tên danh mục" class="w-full" [disabled]="saving" />
+      </div>
+
+      <!-- Type -->
+      <div class="flex flex-col gap-2">
+        <label for="type" class="font-semibold"> Loại danh mục <span class="text-red-500">*</span> </label>
+        <p-dropdown
+          id="type"
+          [(ngModel)]="category.type"
+          [options]="categoryTypes"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Chọn loại danh mục"
+          styleClass="w-full"
+          [disabled]="saving"
+        ></p-dropdown>
+      </div>
+
+      <!-- Description -->
+      <div class="flex flex-col gap-2">
+        <label for="description" class="font-semibold">Mô tả</label>
+        <textarea pInputTextarea id="description" [(ngModel)]="category.description" rows="3" placeholder="Nhập mô tả cho danh mục" class="w-full" [disabled]="saving"></textarea>
+      </div>
+
+      <!-- Order -->
+      <div class="flex flex-col gap-2">
+        <label for="order" class="font-semibold">Thứ tự hiển thị</label>
+        <p-inputNumber id="order" [(ngModel)]="category.order" [showButtons]="true" [min]="0" [max]="999" placeholder="0" styleClass="w-full" [disabled]="saving"></p-inputNumber>
+        <small class="text-gray-500">Số nhỏ hơn sẽ hiển thị trước</small>
+      </div>
+
+      <!-- Status (only in edit mode) -->
+      <div class="flex flex-col gap-2" *ngIf="isEditMode">
+        <label class="font-semibold">Trạng thái</label>
+        <div class="flex items-center gap-4 p-3 rounded-lg" [ngClass]="category.isActive ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
+          <div class="flex items-center gap-3 flex-1">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center" [ngClass]="category.isActive ? 'bg-green-500' : 'bg-red-500'">
+              <i class="pi text-white text-lg" [ngClass]="category.isActive ? 'pi-check' : 'pi-times'"></i>
+            </div>
+            <div>
+              <p class="font-semibold" [ngClass]="category.isActive ? 'text-green-700' : 'text-red-700'">
+                {{ category.isActive ? 'Đang hoạt động' : 'Đã vô hiệu hóa' }}
+              </p>
+              <p class="text-sm" [ngClass]="category.isActive ? 'text-green-600' : 'text-red-600'">
+                {{ category.isActive ? 'Danh mục hiển thị cho người dùng' : 'Danh mục bị ẩn khỏi hệ thống' }}
+              </p>
+            </div>
+          </div>
+          <p-button
+            [label]="category.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'"
+            [icon]="category.isActive ? 'pi pi-ban' : 'pi pi-check-circle'"
+            [severity]="category.isActive ? 'danger' : 'success'"
+            [outlined]="true"
+            size="small"
+            (onClick)="category.isActive = !category.isActive"
+            [disabled]="saving"
+          ></p-button>
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end gap-2">
+        <p-button label="Hủy" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="hideDialog()" [disabled]="saving"></p-button>
+        <p-button [label]="isEditMode ? 'Cập nhật' : 'Tạo mới'" icon="pi pi-check" (onClick)="saveCategory()" [loading]="saving"></p-button>
+      </div>
+    </ng-template>
+  </p-dialog>
+</div>

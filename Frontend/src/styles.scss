@@ -1,0 +1,38 @@
+/* You can add global styles to this file, and also import other style files */
+@use './tailwind.css';
+@use './assets/layout/layout.scss';
+@use 'primeicons/primeicons.css';
+@use './assets/demo/demo.scss';
+
+/* Override PrimeNG Aura theme primary color to Indigo - Must be after imports */
+:root {
+  --p-primary-50: #eef2ff !important;
+  --p-primary-100: #e0e7ff !important;
+  --p-primary-200: #c7d2fe !important;
+  --p-primary-300: #a5b4fc !important;
+  --p-primary-400: #818cf8 !important;
+  --p-primary-500: #6366f1 !important;
+  --p-primary-600: #4f46e5 !important;
+  --p-primary-700: #4338ca !important;
+  --p-primary-800: #3730a3 !important;
+  --p-primary-900: #312e81 !important;
+  --p-primary-950: #1e1b4b !important;
+  --p-primary-color: #4338ca !important;
+  --p-primary-contrast-color: #ffffff !important;
+}
+
+.app-dark {
+  --p-primary-50: #eef2ff !important;
+  --p-primary-100: #e0e7ff !important;
+  --p-primary-200: #c7d2fe !important;
+  --p-primary-300: #a5b4fc !important;
+  --p-primary-400: #818cf8 !important;
+  --p-primary-500: #6366f1 !important;
+  --p-primary-600: #4f46e5 !important;
+  --p-primary-700: #4338ca !important;
+  --p-primary-800: #3730a3 !important;
+  --p-primary-900: #312e81 !important;
+  --p-primary-950: #1e1b4b !important;
+  --p-primary-color: #4338ca !important;
+  --p-primary-contrast-color: #ffffff !important;
+}

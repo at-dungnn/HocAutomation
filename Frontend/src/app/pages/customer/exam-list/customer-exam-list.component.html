@@ -1,0 +1,129 @@
+<div class="min-h-screen bg-gray-50 pb-20">
+  <p-toast />
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <h1 class="text-xl font-bold">Đề thi</h1>
+      <p class="text-sm text-indigo-200">Chọn đề thi để bắt đầu luyện tập</p>
+    </div>
+  </header>
+
+  <!-- Filter -->
+  <div class="max-w-7xl mx-auto px-4 py-4">
+    <div class="bg-white rounded-xl shadow-sm p-4">
+      <p-dropdown
+        [(ngModel)]="selectedCategoryId"
+        [options]="categories"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Chọn danh mục"
+        (onChange)="onCategoryChange()"
+        styleClass="w-full"
+      />
+    </div>
+  </div>
+
+  <!-- Loading Skeleton -->
+  <div *ngIf="loading" class="max-w-7xl mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div *ngFor="let i of [1,2,3,4,5,6]" class="bg-white rounded-xl shadow-sm p-4">
+        <p-skeleton height="1.5rem" styleClass="mb-3" />
+        <p-skeleton height="1rem" styleClass="mb-2" />
+        <p-skeleton height="1rem" width="60%" styleClass="mb-4" />
+        <div class="flex gap-2">
+          <p-skeleton height="2rem" width="4rem" />
+          <p-skeleton height="2rem" width="4rem" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exam List -->
+  <div *ngIf="!loading" class="max-w-7xl mx-auto px-4">
+    <!-- Empty State -->
+    <div *ngIf="exams.length === 0" class="text-center py-12">
+      <i class="pi pi-inbox text-5xl text-gray-300 mb-4"></i>
+      <p class="text-gray-500 text-lg">Chưa có đề thi nào</p>
+      <p class="text-gray-400 text-sm">Vui lòng quay lại sau</p>
+    </div>
+
+    <!-- Exam Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div
+        *ngFor="let exam of exams"
+        class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+      >
+        <!-- Card Header -->
+        <div class="p-4 border-b">
+          <div class="flex items-start justify-between mb-2">
+            <p-tag
+              [value]="getTypeLabel(exam.type)"
+              [severity]="getTypeSeverity(exam.type)"
+            />
+            <span class="text-xs text-gray-400">
+              {{ exam.attemptCount }} lượt thi
+            </span>
+          </div>
+          <h3 class="font-semibold text-gray-800 text-lg line-clamp-2">
+            {{ exam.title }}
+          </h3>
+          <p *ngIf="exam.description" class="text-sm text-gray-500 mt-1 line-clamp-2">
+            {{ exam.description }}
+          </p>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-4 bg-gray-50">
+          <div class="grid grid-cols-3 gap-2 text-center mb-4">
+            <div>
+              <div class="text-lg font-bold text-indigo-600">{{ exam.totalQuestions }}</div>
+              <div class="text-xs text-gray-500">Câu hỏi</div>
+            </div>
+            <div>
+              <div class="text-lg font-bold text-blue-600">{{ formatDuration(exam.duration) }}</div>
+              <div class="text-xs text-gray-500">Thời gian</div>
+            </div>
+            <div>
+              <div class="text-lg font-bold text-green-600">{{ exam.passingScore }}%</div>
+              <div class="text-xs text-gray-500">Điểm đậu</div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-gray-500 bg-white px-2 py-1 rounded">
+              <i class="pi pi-tag mr-1"></i>
+              {{ getCategoryName(exam) }}
+            </span>
+            <button
+              pButton
+              label="Vào thi"
+              icon="pi pi-play"
+              class="p-button-sm"
+              (click)="startExam(exam)"
+            ></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load More -->
+    <div *ngIf="hasMore" class="text-center py-6">
+      <button
+        pButton
+        label="Xem thêm"
+        icon="pi pi-chevron-down"
+        class="p-button-outlined"
+        (click)="loadMore()"
+      ></button>
+    </div>
+
+    <!-- Stats -->
+    <div *ngIf="exams.length > 0" class="text-center py-4 text-sm text-gray-500">
+      Hiển thị {{ exams.length }} / {{ total }} đề thi
+    </div>
+  </div>
+
+  <!-- Footer Nav -->
+  <app-footer-nav />
+</div>

@@ -1,0 +1,312 @@
+<!-- Mobile-First Customer Dashboard -->
+<div class="dashboard-container flex flex-col min-h-screen bg-gray-50">
+  <!-- Header Section -->
+  <header class="dashboard-header sticky top-0 z-50">
+    <div class="flex items-center justify-between bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-4 py-3 shadow-md">
+      <!-- Logo -->
+      <div class="flex items-center gap-2">
+        <div class="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+          <i class="pi pi-graduation-cap text-xl"></i>
+        </div>
+        <span class="text-lg font-bold hidden sm:block">Thi Công Chức</span>
+      </div>
+
+      <!-- User Menu -->
+      <div class="flex items-center gap-2">
+        <!-- Role Badge (hidden on mobile) -->
+        <div class="hidden md:flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
+          <i class="pi pi-user text-sm"></i>
+          <span class="text-sm font-medium">{{ getRoleLabel() }}</span>
+        </div>
+
+        <!-- User Avatar Button -->
+        <button
+          pButton
+          [text]="true"
+          [rounded]="true"
+          class="!text-white"
+          (click)="userPanel.toggle($event)"
+        >
+          <p-avatar
+            icon="pi pi-user"
+            styleClass="bg-white/20 text-white"
+            shape="circle"
+          ></p-avatar>
+        </button>
+
+        <!-- User Panel Overlay -->
+        <p-overlayPanel #userPanel>
+          <div class="w-64">
+            <!-- User Info -->
+            <div class="p-3 border-b border-gray-200">
+              <div class="flex items-center gap-3 mb-2">
+                <p-avatar
+                  icon="pi pi-user"
+                  styleClass="bg-indigo-600 text-white"
+                  shape="circle"
+                ></p-avatar>
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-gray-800 truncate">
+                    {{ currentUser?.username || userEmail || 'Người dùng' }}
+                  </p>
+                  <p class="text-sm text-gray-500">{{ getRoleLabel() }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Menu Items -->
+            <div class="py-2">
+              <button
+                class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-3 text-gray-700"
+                routerLink="/dashboard"
+              >
+                <i class="pi pi-home"></i>
+                <span>Trang chủ</span>
+              </button>
+              <button
+                class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-3 text-gray-700"
+                routerLink="/profile"
+              >
+                <i class="pi pi-user"></i>
+                <span>Thông tin tài khoản</span>
+              </button>
+              <button
+                class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-3 text-gray-700"
+                routerLink="/dashboard/history"
+              >
+                <i class="pi pi-history"></i>
+                <span>Lịch sử làm bài</span>
+              </button>
+            </div>
+
+            <!-- Logout -->
+            <div class="border-t border-gray-200 pt-2">
+              <button
+                class="w-full text-left px-4 py-2 hover:bg-red-50 flex items-center gap-3 text-red-600 font-medium"
+                [disabled]="isLoggingOut()"
+                (click)="onLogout(); userPanel.hide()"
+              >
+                <i class="pi" [ngClass]="isLoggingOut() ? 'pi-spin pi-spinner' : 'pi-sign-out'"></i>
+                <span>{{ isLoggingOut() ? 'Đang đăng xuất...' : 'Đăng xuất' }}</span>
+              </button>
+            </div>
+          </div>
+        </p-overlayPanel>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-main flex-grow overflow-y-auto pb-24 px-4 py-4">
+    <div class="max-w-7xl mx-auto space-y-4 md:space-y-6">
+      <!-- Welcome Section -->
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg p-4 md:p-6">
+        <h1 class="text-xl md:text-3xl font-bold mb-2">
+          Xin chào, {{ currentUser?.username }}! 👋
+        </h1>
+        <p class="text-blue-100 text-sm md:text-base">
+          Chào mừng bạn quay trở lại. Hãy tiếp tục hành trình học tập của bạn!
+        </p>
+      </div>
+
+      <!-- Stats Cards - Mobile: 2 columns, Desktop: 4 columns -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-3 md:p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-gray-600 text-xs md:text-sm mb-1">Tổng số bài thi</div>
+              <div class="text-2xl md:text-3xl font-bold text-blue-600">{{ stats?.totalExams || 0 }}</div>
+            </div>
+            <i class="pi pi-file text-2xl md:text-4xl text-blue-300"></i>
+          </div>
+        </div>
+
+        <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-3 md:p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-gray-600 text-xs md:text-sm mb-1">Đã hoàn thành</div>
+              <div class="text-2xl md:text-3xl font-bold text-green-600">{{ stats?.completedExams || 0 }}</div>
+            </div>
+            <i class="pi pi-check-circle text-2xl md:text-4xl text-green-300"></i>
+          </div>
+        </div>
+
+        <div class="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-3 md:p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-gray-600 text-xs md:text-sm mb-1">Điểm TB</div>
+              <div class="text-2xl md:text-3xl font-bold text-purple-600">{{ stats?.averageScore || 0 }}%</div>
+            </div>
+            <i class="pi pi-star text-2xl md:text-4xl text-purple-300"></i>
+          </div>
+        </div>
+
+        <div class="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-3 md:p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-gray-600 text-xs md:text-sm mb-1">Thời gian học</div>
+              <div class="text-2xl md:text-3xl font-bold text-orange-600">{{ stats?.studyTime || 0 }}h</div>
+            </div>
+            <i class="pi pi-clock text-2xl md:text-4xl text-orange-300"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row - Stack on mobile -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <!-- Weekly Activity Chart -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800">📊 Hoạt động 7 ngày qua</h3>
+          </div>
+          <div class="p-4">
+            <p-chart type="line" [data]="weeklyActivityData" [options]="chartOptions" height="200px"></p-chart>
+          </div>
+        </div>
+
+        <!-- Score Distribution Chart -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800">🎯 Phân bố điểm số</h3>
+          </div>
+          <div class="p-4">
+            <p-chart type="doughnut" [data]="scoreDistributionData" [options]="doughnutOptions" height="200px"></p-chart>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activities -->
+      <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+          <h3 class="text-lg font-bold text-gray-800">🕐 Hoạt động gần đây</h3>
+          <p-button
+            label="Xem tất cả"
+            icon="pi pi-arrow-right"
+            [text]="true"
+            size="small"
+            routerLink="/dashboard/history"
+          ></p-button>
+        </div>
+
+        <!-- Mobile: Card view, Desktop: Table view -->
+        <div class="hidden md:block">
+          <p-table [value]="stats?.recentActivities || []" [paginator]="false" styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Loại</th>
+                <th>Tiêu đề</th>
+                <th>Ngày</th>
+                <th>Kết quả</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-activity>
+              <tr>
+                <td>
+                  <p-tag
+                    [value]="activity.type === 'EXAM' ? 'Bài thi' : 'Khóa học'"
+                    [severity]="activity.type === 'EXAM' ? 'info' : 'success'"
+                  ></p-tag>
+                </td>
+                <td>{{ activity.title }}</td>
+                <td>{{ activity.date | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td>
+                  @if (activity.score !== undefined) {
+                    <span class="font-semibold" [class]="getScoreClass(activity.score)">
+                      {{ activity.score }}%
+                    </span>
+                  }
+                  @if (activity.progress !== undefined) {
+                    <p-progressBar [value]="activity.progress" [showValue]="true"></p-progressBar>
+                  }
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" class="text-center py-8 text-gray-500">
+                  <i class="pi pi-inbox text-3xl mb-2"></i>
+                  <p>Chưa có hoạt động nào</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+        <!-- Mobile Card View -->
+        <div class="md:hidden divide-y divide-gray-100">
+          @for (activity of stats?.recentActivities || []; track activity.title) {
+            <div class="p-4">
+              <div class="flex items-center justify-between mb-2">
+                <p-tag
+                  [value]="activity.type === 'EXAM' ? 'Bài thi' : 'Khóa học'"
+                  [severity]="activity.type === 'EXAM' ? 'info' : 'success'"
+                ></p-tag>
+                <span class="text-xs text-gray-500">{{ activity.date | date: 'dd/MM HH:mm' }}</span>
+              </div>
+              <p class="font-medium text-gray-800 mb-2">{{ activity.title }}</p>
+              @if (activity.score !== undefined) {
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-gray-600">Điểm:</span>
+                  <span class="font-bold" [class]="getScoreClass(activity.score)">{{ activity.score }}%</span>
+                </div>
+              }
+              @if (activity.progress !== undefined) {
+                <p-progressBar [value]="activity.progress" [showValue]="true"></p-progressBar>
+              }
+            </div>
+          } @empty {
+            <div class="p-8 text-center text-gray-500">
+              <i class="pi pi-inbox text-3xl mb-2"></i>
+              <p>Chưa có hoạt động nào</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Quick Actions - Mobile: 1 column, Desktop: 3 columns -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+        <a
+          routerLink="/dashboard/exams"
+          class="bg-white rounded-lg shadow-sm p-4 md:p-6 hover:shadow-md transition-shadow flex sm:flex-col items-center sm:text-center gap-4 sm:gap-0"
+        >
+          <div class="bg-blue-100 p-3 rounded-full sm:mb-4">
+            <i class="pi pi-file-edit text-2xl md:text-4xl text-blue-600"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800 mb-1">Làm bài thi</h3>
+            <p class="text-gray-600 text-sm">Luyện tập với các đề thi mới nhất</p>
+          </div>
+        </a>
+
+        <a
+          routerLink="/dashboard/courses"
+          class="bg-white rounded-lg shadow-sm p-4 md:p-6 hover:shadow-md transition-shadow flex sm:flex-col items-center sm:text-center gap-4 sm:gap-0"
+        >
+          <div class="bg-green-100 p-3 rounded-full sm:mb-4">
+            <i class="pi pi-book text-2xl md:text-4xl text-green-600"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800 mb-1">Khóa học</h3>
+            <p class="text-gray-600 text-sm">Tham gia các khóa học chất lượng</p>
+          </div>
+        </a>
+
+        <a
+          routerLink="/dashboard/materials"
+          class="bg-white rounded-lg shadow-sm p-4 md:p-6 hover:shadow-md transition-shadow flex sm:flex-col items-center sm:text-center gap-4 sm:gap-0"
+        >
+          <div class="bg-purple-100 p-3 rounded-full sm:mb-4">
+            <i class="pi pi-download text-2xl md:text-4xl text-purple-600"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800 mb-1">Tài liệu</h3>
+            <p class="text-gray-600 text-sm">Tải tài liệu ôn thi chất lượng</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Navigation -->
+  <app-footer-nav></app-footer-nav>
+</div>

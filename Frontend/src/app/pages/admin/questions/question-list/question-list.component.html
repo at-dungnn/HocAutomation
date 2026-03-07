@@ -1,0 +1,381 @@
+<div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <p-toast />
+  <p-confirmDialog />
+
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center gap-4 mb-4">
+      <button
+        pButton
+        icon="pi pi-arrow-left"
+        class="p-button-text p-button-secondary"
+        routerLink="/admin"
+        pTooltip="Quay lại"
+      ></button>
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Ngân hàng câu hỏi</h1>
+        <p class="text-gray-600 text-sm md:text-base">Quản lý câu hỏi thi trắc nghiệm</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+      <!-- Filters -->
+      <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+        <p-dropdown
+          [(ngModel)]="selectedCategoryId"
+          [options]="categories"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Chọn danh mục"
+          [showClear]="true"
+          (onChange)="onFilter()"
+          styleClass="w-full sm:w-48"
+        />
+        <p-dropdown
+          [(ngModel)]="selectedDifficulty"
+          [options]="difficultyOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Độ khó"
+          (onChange)="onFilter()"
+          styleClass="w-full sm:w-40"
+        />
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-2 w-full md:w-auto">
+        <button
+          pButton
+          label="Thêm câu hỏi"
+          icon="pi pi-plus"
+          class="p-button-success flex-1 md:flex-none"
+          (click)="openNew()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Questions Table -->
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <p-table
+      #dt
+      [value]="questions"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="rows"
+      [first]="first"
+      [totalRecords]="totalRecords"
+      [lazy]="true"
+      (onLazyLoad)="onPageChange($event)"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Hiển thị {first} - {last} / {totalRecords} câu hỏi"
+      styleClass="p-datatable-sm"
+      [tableStyle]="{ 'min-width': '100%' }"
+      [scrollable]="true"
+      scrollHeight="flex"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 60px" class="text-center">STT</th>
+          <th style="min-width: 200px">CÂU HỎI</th>
+          <th style="min-width: 120px">ĐÁP ÁN 1</th>
+          <th style="min-width: 120px">ĐÁP ÁN 2</th>
+          <th style="min-width: 120px">ĐÁP ÁN 3</th>
+          <th style="min-width: 120px">ĐÁP ÁN 4</th>
+          <th style="width: 100px" class="text-center">ĐÁP ÁN ĐÚNG</th>
+          <th style="min-width: 150px">TRÍCH DẪN</th>
+          <th style="width: 100px">ĐỘ KHÓ</th>
+          <th style="width: 100px" class="text-center">THAO TÁC</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-q let-rowIndex="rowIndex">
+        <tr>
+          <td class="text-center font-medium">{{ first + rowIndex + 1 }}</td>
+          <td>
+            <div class="max-w-xs" [title]="q.content">
+              {{ truncateText(q.content, 60) }}
+            </div>
+          </td>
+          <td>
+            <span [class.text-green-600]="q.options?.[0]?.isCorrect" [class.font-semibold]="q.options?.[0]?.isCorrect">
+              {{ truncateText(getOptionText(q.options, 0), 30) }}
+            </span>
+          </td>
+          <td>
+            <span [class.text-green-600]="q.options?.[1]?.isCorrect" [class.font-semibold]="q.options?.[1]?.isCorrect">
+              {{ truncateText(getOptionText(q.options, 1), 30) }}
+            </span>
+          </td>
+          <td>
+            <span [class.text-green-600]="q.options?.[2]?.isCorrect" [class.font-semibold]="q.options?.[2]?.isCorrect">
+              {{ truncateText(getOptionText(q.options, 2), 30) }}
+            </span>
+          </td>
+          <td>
+            <span [class.text-green-600]="q.options?.[3]?.isCorrect" [class.font-semibold]="q.options?.[3]?.isCorrect">
+              {{ truncateText(getOptionText(q.options, 3), 30) }}
+            </span>
+          </td>
+          <td class="text-center">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 font-bold">
+              {{ getCorrectAnswerText(q.options) }}
+            </span>
+          </td>
+          <td>
+            <span class="text-gray-600 text-sm" [title]="q.explanation">
+              {{ truncateText(q.explanation || '', 40) }}
+            </span>
+          </td>
+          <td>
+            <p-tag
+              [value]="getDifficultyLabel(q.difficulty)"
+              [severity]="getDifficultySeverity(q.difficulty)"
+            />
+          </td>
+          <td class="text-center">
+            <div class="flex gap-1 justify-center">
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-rounded p-button-text p-button-warning p-button-sm"
+                (click)="editQuestion(q)"
+                pTooltip="Sửa"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                (click)="deleteQuestion(q)"
+                pTooltip="Xóa"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10" class="text-center py-12">
+            <div class="flex flex-col items-center">
+              <i class="pi pi-inbox text-5xl text-gray-300 mb-4"></i>
+              <p class="text-gray-500 text-lg">Chưa có câu hỏi nào</p>
+              <p class="text-gray-400 text-sm">Nhấn "Thêm câu hỏi" để bắt đầu</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Question Dialog -->
+  <p-dialog
+    [(visible)]="questionDialog"
+    [header]="isEditMode ? 'Chỉnh sửa câu hỏi' : 'Thêm câu hỏi mới'"
+    [modal]="true"
+    [style]="{ width: '95vw', maxWidth: '800px' }"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="p-fluid"
+  >
+    <div class="space-y-5">
+      <!-- Category & Course Selection -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Danh mục <span class="text-red-500">*</span>
+          </label>
+          <p-dropdown
+            [(ngModel)]="question.categoryId"
+            [options]="categories"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Chọn danh mục trước"
+            (onChange)="onFormCategoryChange()"
+            styleClass="w-full"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Khóa học <span class="text-red-500">*</span>
+          </label>
+          <p-dropdown
+            [(ngModel)]="question.courseId"
+            [options]="filteredCourses"
+            optionLabel="title"
+            optionValue="id"
+            placeholder="{{ question.categoryId ? 'Chọn khóa học' : 'Chọn danh mục trước' }}"
+            [disabled]="!question.categoryId"
+            styleClass="w-full"
+          />
+          <small *ngIf="question.categoryId && filteredCourses.length === 0" class="text-orange-500">
+            Danh mục này chưa có khóa học nào
+          </small>
+        </div>
+      </div>
+
+      <!-- Difficulty -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Độ khó <span class="text-red-500">*</span>
+          </label>
+          <p-dropdown
+            [(ngModel)]="question.difficulty"
+            [options]="difficultyFormOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Chọn độ khó"
+            styleClass="w-full"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Điểm</label>
+          <input
+            pInputText
+            type="number"
+            [(ngModel)]="question.points"
+            min="1"
+            class="w-full"
+            placeholder="1"
+          />
+        </div>
+      </div>
+
+      <!-- Question Content -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Nội dung câu hỏi <span class="text-red-500">*</span>
+        </label>
+        <textarea
+          pInputText
+          [(ngModel)]="question.content"
+          rows="3"
+          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Nhập nội dung câu hỏi..."
+        ></textarea>
+      </div>
+
+      <!-- Answer Options -->
+      <div class="border-t pt-4">
+        <label class="block text-sm font-medium text-gray-700 mb-3">
+          Các đáp án <span class="text-red-500">*</span>
+        </label>
+        
+        <div class="space-y-3">
+          <!-- Option 1 -->
+          <div class="flex items-center gap-3">
+            <p-radioButton
+              name="correctAnswer"
+              value="1"
+              [(ngModel)]="question.correctAnswer"
+              inputId="opt1"
+            />
+            <label for="opt1" class="w-24 text-sm font-medium text-gray-600">Đáp án 1:</label>
+            <input
+              pInputText
+              [(ngModel)]="question.option1"
+              class="flex-1"
+              placeholder="Nhập đáp án 1"
+            />
+          </div>
+
+          <!-- Option 2 -->
+          <div class="flex items-center gap-3">
+            <p-radioButton
+              name="correctAnswer"
+              value="2"
+              [(ngModel)]="question.correctAnswer"
+              inputId="opt2"
+            />
+            <label for="opt2" class="w-24 text-sm font-medium text-gray-600">Đáp án 2:</label>
+            <input
+              pInputText
+              [(ngModel)]="question.option2"
+              class="flex-1"
+              placeholder="Nhập đáp án 2"
+            />
+          </div>
+
+          <!-- Option 3 -->
+          <div class="flex items-center gap-3">
+            <p-radioButton
+              name="correctAnswer"
+              value="3"
+              [(ngModel)]="question.correctAnswer"
+              inputId="opt3"
+            />
+            <label for="opt3" class="w-24 text-sm font-medium text-gray-600">Đáp án 3:</label>
+            <input
+              pInputText
+              [(ngModel)]="question.option3"
+              class="flex-1"
+              placeholder="Nhập đáp án 3 (tùy chọn)"
+            />
+          </div>
+
+          <!-- Option 4 -->
+          <div class="flex items-center gap-3">
+            <p-radioButton
+              name="correctAnswer"
+              value="4"
+              [(ngModel)]="question.correctAnswer"
+              inputId="opt4"
+            />
+            <label for="opt4" class="w-24 text-sm font-medium text-gray-600">Đáp án 4:</label>
+            <input
+              pInputText
+              [(ngModel)]="question.option4"
+              class="flex-1"
+              placeholder="Nhập đáp án 4 (tùy chọn)"
+            />
+          </div>
+        </div>
+
+        <p class="text-sm text-gray-500 mt-2">
+          <i class="pi pi-info-circle mr-1"></i>
+          Chọn radio button để đánh dấu đáp án đúng
+        </p>
+      </div>
+
+      <!-- Explanation -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Trích dẫn / Giải thích
+        </label>
+        <textarea
+          pInputText
+          [(ngModel)]="question.explanation"
+          rows="2"
+          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Nhập trích dẫn hoặc giải thích đáp án..."
+        ></textarea>
+      </div>
+
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="flex gap-2 justify-end">
+        <button
+          pButton
+          label="Hủy"
+          icon="pi pi-times"
+          class="p-button-text p-button-secondary"
+          (click)="hideDialog()"
+        ></button>
+        <button
+          pButton
+          [label]="isEditMode ? 'Cập nhật' : 'Thêm mới'"
+          icon="pi pi-check"
+          class="p-button-success"
+          (click)="saveQuestion()"
+          [loading]="saving"
+        ></button>
+      </div>
+    </ng-template>
+  </p-dialog>
+</div>

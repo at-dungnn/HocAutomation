@@ -1,0 +1,147 @@
+<div class="min-h-screen bg-gray-50">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <!-- Header -->
+  <header class="bg-primary text-white shadow-md">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <button pButton icon="pi pi-arrow-left" class="!bg-white !text-primary" rounded="true" (click)="goBack()"></button>
+          <div>
+            <h1 class="text-2xl font-bold">Quản lý Master Data</h1>
+            <p class="text-sm opacity-90">Quản lý dữ liệu cơ bản của hệ thống</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <p-tabView (onChange)="onTabChange($event)">
+        <!-- Commodity Types Tab -->
+        <p-tabPanel header="Loại hàng hóa">
+          <div class="mb-4 flex justify-end">
+            <button pButton label="Thêm mới" icon="pi pi-plus" severity="success" (click)="openNew()"></button>
+          </div>
+
+          <p-table [value]="commodityTypes" [loading]="loading" [paginator]="true" [rows]="10" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Tên</th>
+                <th>Mô tả</th>
+                <th>Ngày tạo</th>
+                <th>Thao tác</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-item>
+              <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ formatDate(item.createdAt) }}</td>
+                <td>
+                  <div class="flex gap-2">
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info" (click)="editItem(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" (click)="deleteItem(item)"></button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+        <!-- Branches Tab -->
+        <p-tabPanel header="Chi nhánh">
+          <div class="mb-4 flex justify-end">
+            <button pButton label="Thêm mới" icon="pi pi-plus" severity="success" (click)="openNew()"></button>
+          </div>
+
+          <p-table [value]="branches" [loading]="loading" [paginator]="true" [rows]="10" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Tên chi nhánh</th>
+                <th>Địa chỉ</th>
+                <th>Ngày tạo</th>
+                <th>Thao tác</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-item>
+              <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ formatDate(item.createdAt) }}</td>
+                <td>
+                  <div class="flex gap-2">
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info" (click)="editItem(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" (click)="deleteItem(item)"></button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+        <!-- Booking Statuses Tab -->
+        <p-tabPanel header="Trạng thái đơn hàng">
+          <div class="mb-4 flex justify-end">
+            <button pButton label="Thêm mới" icon="pi pi-plus" severity="success" (click)="openNew()"></button>
+          </div>
+
+          <p-table [value]="bookingStatuses" [loading]="loading" [paginator]="true" [rows]="10" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Tên trạng thái</th>
+                <th>Mô tả</th>
+                <th>Ngày tạo</th>
+                <th>Thao tác</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-item>
+              <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ formatDate(item.createdAt) }}</td>
+                <td>
+                  <div class="flex gap-2">
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info" (click)="editItem(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" (click)="deleteItem(item)"></button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+      </p-tabView>
+    </div>
+  </main>
+
+  <!-- Dialog -->
+  <p-dialog
+    [(visible)]="displayDialog"
+    [header]="isEditMode ? 'Cập nhật ' + getTabTitle() : 'Thêm ' + getTabTitle()"
+    [modal]="true"
+    [style]="{ width: '500px' }"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    <form [formGroup]="itemForm" class="space-y-4">
+      <div class="flex flex-col gap-2">
+        <label for="name" class="font-medium">Tên <span class="text-red-500">*</span></label>
+        <input pInputText id="name" formControlName="name" placeholder="Nhập tên" class="w-full" />
+        <small *ngIf="itemForm.get('name')?.invalid && itemForm.get('name')?.touched" class="text-red-500"> Vui lòng nhập tên </small>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="description" class="font-medium">Mô tả</label>
+        <textarea pInputTextarea id="description" formControlName="description" placeholder="Nhập mô tả" rows="3" class="w-full"></textarea>
+      </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+      <button pButton label="Hủy" icon="pi pi-times" class="p-button-text" (click)="displayDialog = false"></button>
+      <button pButton label="Lưu" icon="pi pi-check" (click)="saveItem()"></button>
+    </ng-template>
+  </p-dialog>
+</div>
