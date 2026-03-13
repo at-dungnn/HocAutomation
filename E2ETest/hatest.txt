@@ -1,0 +1,13 @@
+const login = require('./login');
+
+test('Đăng nhập thành công với đúng tài khoản', () => {
+  const result = login('admin', '123456');
+  expect(result.status).toBe(200);
+  expect(result.message).toBe('Thành công');
+});
+
+test('Đăng nhập thất bại khi sai mật khẩu', () => {
+  const result = login('admin', 'wrongpass');
+  expect(result.status).toBe(401);
+  expect(result.message).toBe('Sai tài khoản hoặc mật khẩu');
+});
